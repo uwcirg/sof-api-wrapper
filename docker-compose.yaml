@@ -1,0 +1,12 @@
+---
+version: "3.4"
+services:
+  sof_wrapper:
+    build:
+      context: .
+    volumes:
+      - ./:/opt/app
+    ports:
+      - 5000:5000
+    env_file:
+      - sof_wrapper.env
