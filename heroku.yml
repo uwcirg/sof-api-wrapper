@@ -1,0 +1,7 @@
+build:
+  docker:
+    web: Dockerfile
+  config:
+    FLASK_ENV: production
+run:
+  web: flask run --host 0.0.0.0
