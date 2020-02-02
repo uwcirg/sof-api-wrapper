@@ -2,6 +2,20 @@ SMART-on-FHIR Proxy
 ===================
 SMART-on-FHIR confidential client and proxy
 
+Launch
+------
+To start an EHR launch follow the below steps
+
+Generate a launch URL in the below form, where `SERVER_NAME` matches the value in `sof_wrapper.env`
+
+http://SERVER_NAME/auth/launch
+
+Enter the above URL as the **App Launch URL** in the [SMART App Launcher](https://launch.smarthealthit.org/)
+
+* Uncheck **Simulate launch within the EHR user interface**
+* Select **R2 (DSTU2)** for **FHIR Version**
+
+Click **Launch App!**
 
 Development
 -----------
