@@ -13,6 +13,8 @@ def launch():
     set /auth/launch as SoF App Launch URL
     """
     iss = request.args['iss']
+    # errors with r4 even if iss and aud params match
+    #iss = 'https://launch.smarthealthit.org/v/r2/fhir'
 
     # fetch conformance statement from /metadata
     ehr_metadata_url = '%s/metadata' % iss
@@ -35,16 +37,16 @@ def launch():
         #api_base_url=iss+'/',
         #client_kwargs={'scope': 'user:email'},
     )
-
     sof = oauth.create_client('sof')
 
+    # URL to pass (as QS param) to EHR Authz server
+    # EHR Authz server will redirect to this URL after authorization
+    return_url = url_for('auth.authorize', _external=True)
 
-    redir_url = url_for('auth.authorize', _external=True)
-    # errors with r4 even if iss and aud params match
-    #iss = 'https://launch.smarthealthit.org/v/r2/fhir'
-    print('redirecting to authorize_url', redir_url)
+    current_app.logger.info('redirecting to EHR Authz. will return to: %s', return_url)
+
     # SoF requires iss to be passed as aud querystring param
-    return sof.authorize_redirect(redir_url, aud=iss)
+    return sof.authorize_redirect(redirect_uri=return_url, aud=iss)
 
 
 @blueprint.route('/authorize')
