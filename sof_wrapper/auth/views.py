@@ -52,6 +52,14 @@ def authorize():
     """
     Direct identity provider to redirect here after auth
     """
+    # raise 400 if error passed (as querystring params)
+    if 'error' in request.args:
+        error_details = {
+            'error': request.args['error'],
+            'error_description': request.args['error_description'],
+        }
+        return error_details, 400
+
     oauth.init_app(current_app)
     oauth.register('sof')
     token = oauth.sof.authorize_access_token()
