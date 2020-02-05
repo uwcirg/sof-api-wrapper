@@ -61,6 +61,9 @@ def authorize():
             'error_description': request.args['error_description'],
         }
         return error_details, 400
+    # authlib persists OAuth client details via secure cookie
+    if not '_sof_authlib_state_' in session:
+        return 'authlib state cookie missing; restart auth flow', 400
 
     oauth.init_app(current_app)
     oauth.register('sof')
