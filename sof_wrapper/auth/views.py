@@ -26,8 +26,6 @@ def launch():
     token_url = metadata_security['extension'][0]['extension'][1]['valueUri']
 
     # set client id and secret from flask config
-    # todo: determine if any details need to be preserved between requests
-    oauth.init_app(current_app)
     oauth.register(
         name='sof',
         access_token_url=token_url,
@@ -37,7 +35,6 @@ def launch():
         #api_base_url=iss+'/',
         #client_kwargs={'scope': 'user:email'},
     )
-    sof = oauth.create_client('sof')
 
     # URL to pass (as QS param) to EHR Authz server
     # EHR Authz server will redirect to this URL after authorization
@@ -46,7 +43,7 @@ def launch():
     current_app.logger.info('redirecting to EHR Authz. will return to: %s', return_url)
 
     # SoF requires iss to be passed as aud querystring param
-    return sof.authorize_redirect(redirect_uri=return_url, aud=iss)
+    return oauth.sof.authorize_redirect(redirect_uri=return_url, aud=iss)
 
 
 @blueprint.route('/authorize')
@@ -65,8 +62,6 @@ def authorize():
     if not '_sof_authlib_state_' in session:
         return 'authlib state cookie missing; restart auth flow', 400
 
-    oauth.init_app(current_app)
-    oauth.register('sof')
     token = oauth.sof.authorize_access_token()
 
     # Brenda Jackson
