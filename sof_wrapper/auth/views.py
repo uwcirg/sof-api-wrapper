@@ -74,7 +74,7 @@ def authorize():
     return {
         'req': request.args,
         'token': token,
-        'patient_data': response.json()
+        'patient_data': response.json(),
     }
 
 
