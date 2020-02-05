@@ -1,4 +1,4 @@
-from flask import Blueprint, current_app, redirect, request, url_for
+from flask import Blueprint, current_app, redirect, request, url_for, session
 import requests
 
 from sof_wrapper.extensions import oauth
@@ -81,3 +81,8 @@ def authorize():
 @blueprint.route('/users/<int:user_id>')
 def users(user_id):
     return {'ok':True}
+
+
+@blueprint.before_request
+def before_request_func():
+    current_app.logger.info('session: %s', session)
