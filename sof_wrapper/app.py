@@ -1,6 +1,6 @@
 from flask import Flask
 
-from sof_wrapper import auth
+from sof_wrapper import auth, api
 from sof_wrapper.extensions import oauth
 
 
@@ -26,3 +26,4 @@ def register_blueprints(app):
     """register all blueprints for application
     """
     app.register_blueprint(auth.views.blueprint)
+    app.register_blueprint(api.views.base_blueprint)
