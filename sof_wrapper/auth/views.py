@@ -59,8 +59,8 @@ def authorize():
         }
         return error_details, 400
     # authlib persists OAuth client details via secure cookie
-    if not '_sof_authlib_state_' in session:
-        return 'authlib state cookie missing; restart auth flow', 400
+    #if not '_sof_authlib_state_' in session:
+        #return 'authlib state cookie missing; restart auth flow', 400
 
     token = oauth.sof.authorize_access_token()
 
@@ -84,3 +84,4 @@ def users(user_id):
 @blueprint.before_request
 def before_request_func():
     current_app.logger.info('session: %s', session)
+    current_app.logger.info('authlib state present: %s', '_sof_authlib_state_' in session)
