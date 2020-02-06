@@ -83,5 +83,12 @@ def users(user_id):
 
 @blueprint.before_request
 def before_request_func():
-    current_app.logger.info('session: %s', session)
-    current_app.logger.info('authlib state present: %s', '_sof_authlib_state_' in session)
+    current_app.logger.info('before_request session: %s', session)
+    current_app.logger.info('before_request authlib state present: %s', '_sof_authlib_state_' in session)
+
+
+@blueprint.after_request
+def after_request_func(resp):
+    current_app.logger.info('after_request session: %s', session)
+    current_app.logger.info('after_request authlib state present: %s', '_sof_authlib_state_' in session)
+    return resp
