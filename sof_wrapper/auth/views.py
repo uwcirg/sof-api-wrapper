@@ -78,7 +78,7 @@ def authorize():
 
     #return redirect(url_for('auth.auth_info'))
 
-    frontend_url = 'http://golem.local:8000/launch.html?%s' % urlencode({
+    frontend_url = 'https://cosri-fe.cirg.washington.edu/launch.html?%s' % urlencode({
         "iss": "https://launch.smarthealthit.org/v/r2/fhir",
         "patient": "5c41cecf-cf81-434f-9da7-e24e5a99dbc2",
     })
@@ -145,7 +145,7 @@ def after_request_func(response):
     current_app.logger.info('after_request session: %s', session)
     current_app.logger.info('after_request authlib state present: %s', '_sof_authlib_state_' in session)
 
-    response.headers['Access-Control-Allow-Origin'] = 'http://golem.local:8000'
+    response.headers['Access-Control-Allow-Origin'] = 'https://cosri-fe.cirg.washington.edu'
     response.headers['Access-Control-Allow-Credentials'] = 'true'
 
     return response
