@@ -1,4 +1,5 @@
 from flask import Blueprint, current_app, redirect, request, url_for, session
+from urllib.parse import urlencode
 import requests
 
 from sof_wrapper.extensions import oauth
@@ -69,11 +70,63 @@ def authorize():
     response = oauth.sof.get(patient_url)
     response.raise_for_status()
 
-    return {
+    session['auth_info'] = {
         'req': request.args,
         'token': token,
         'patient_data': response.json(),
     }
+
+    #return redirect(url_for('auth.auth_info'))
+
+    frontend_url = 'http://golem.local:8000/launch.html?%s' % urlencode({
+        "iss": "https://launch.smarthealthit.org/v/r2/fhir",
+        "patient": "5c41cecf-cf81-434f-9da7-e24e5a99dbc2",
+    })
+    return redirect(frontend_url)
+
+    #return {
+        #'req': request.args,
+        #'token': token,
+        #'patient_data': response.json(),
+    #}
+
+@blueprint.route('/auth-info')
+def auth_info():
+
+
+
+    #return session['auth_info']
+
+    auth_info = session['auth_info']
+
+    return {
+        # from front-end launch-context.json
+        "client_id": "6c12dff4-24e7-4475-a742-b08972c4ea27",
+        "scope": "patient/*.read launch/patient",
+
+        "fakeTokenResponse": {
+            "access_token": auth_info['token']['access_token'],
+            "token_type": "Bearer",
+        },
+        "fhirServiceUrl":"https://launch.smarthealthit.org/v/r2/fhir",
+        "iss":"https://launch.smarthealthit.org/v/r2/fhir",
+        "server":"https://launch.smarthealthit.org/v/r2/fhir",
+        "patientId":"5c41cecf-cf81-434f-9da7-e24e5a99dbc2",
+    }
+
+
+
+    #token = oauth.sof.authorize_access_token()
+
+    # Brenda Jackson
+    #patient_url = 'https://launch.smarthealthit.org/v/r2/fhir/Patient/5c41cecf-cf81-434f-9da7-e24e5a99dbc2'
+    #response = oauth.sof.get(patient_url)
+    #response.raise_for_status()
+    #return {
+        #'req': request.args,
+        #'token': token,
+        #'patient_data': response.json(),
+    #}
 
 
 @blueprint.route('/users/<int:user_id>')
@@ -88,7 +141,11 @@ def before_request_func():
 
 
 @blueprint.after_request
-def after_request_func(resp):
+def after_request_func(response):
     current_app.logger.info('after_request session: %s', session)
     current_app.logger.info('after_request authlib state present: %s', '_sof_authlib_state_' in session)
-    return resp
+
+    response.headers['Access-Control-Allow-Origin'] = 'http://golem.local:8000'
+    response.headers['Access-Control-Allow-Credentials'] = 'true'
+
+    return response
