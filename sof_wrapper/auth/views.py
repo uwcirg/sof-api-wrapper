@@ -76,12 +76,15 @@ def authorize():
         'patient_data': response.json(),
     }
 
-    #return redirect(url_for('auth.auth_info'))
+    frontend_url = '{launch_dest}?{querystring_params}'.format(
+        launch_dest=current_app.config['LAUNCH_DEST'],
+        querystring_params=urlencode({
+            "iss": "https://launch.smarthealthit.org/v/r2/fhir",
+            "patient": "5c41cecf-cf81-434f-9da7-e24e5a99dbc2",
+        }),
+    )
 
-    frontend_url = 'https://cosri-fe.cirg.washington.edu/launch.html?%s' % urlencode({
-        "iss": "https://launch.smarthealthit.org/v/r2/fhir",
-        "patient": "5c41cecf-cf81-434f-9da7-e24e5a99dbc2",
-    })
+    current_app.logger.info('redirecting to frontend app: %s', frontend_url)
     return redirect(frontend_url)
 
 

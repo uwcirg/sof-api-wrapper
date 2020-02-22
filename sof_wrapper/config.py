@@ -10,3 +10,5 @@ SECRET_KEY = os.getenv("SECRET_KEY")
 
 SOF_CLIENT_ID = os.getenv("SOF_CLIENT_ID")
 SOF_CLIENT_SECRET = os.getenv("SOF_CLIENT_SECRET")
+
+LAUNCH_DEST = os.getenv("LAUNCH_DEST")
