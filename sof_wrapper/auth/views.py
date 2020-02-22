@@ -145,7 +145,9 @@ def after_request_func(response):
     current_app.logger.info('after_request session: %s', session)
     current_app.logger.info('after_request authlib state present: %s', '_sof_authlib_state_' in session)
 
-    response.headers['Access-Control-Allow-Origin'] = 'https://cosri-fe.cirg.washington.edu'
+    # todo: make configurable
+    origin = request.headers.get('Origin', '*')
+    response.headers['Access-Control-Allow-Origin'] = origin
     response.headers['Access-Control-Allow-Credentials'] = 'true'
 
     return response
