@@ -84,19 +84,9 @@ def authorize():
     })
     return redirect(frontend_url)
 
-    #return {
-        #'req': request.args,
-        #'token': token,
-        #'patient_data': response.json(),
-    #}
 
 @blueprint.route('/auth-info')
 def auth_info():
-
-
-
-    #return session['auth_info']
-
     auth_info = session['auth_info']
 
     return {
@@ -113,7 +103,6 @@ def auth_info():
         "server":"https://launch.smarthealthit.org/v/r2/fhir",
         "patientId":"5c41cecf-cf81-434f-9da7-e24e5a99dbc2",
     }
-
 
 
     #token = oauth.sof.authorize_access_token()
