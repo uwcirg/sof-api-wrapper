@@ -6,6 +6,8 @@ services:
       context: .
     volumes:
       - ./:/opt/app
+      # mount host certificates into container
+      - /etc/ssl/certs:/etc/ssl/certs:ro
     ports:
       # allow override of published port
       - ${P_PORT:-5000}:5000
