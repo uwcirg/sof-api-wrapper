@@ -1,4 +1,5 @@
 from flask import Blueprint, current_app, redirect, request, url_for, session
+from urllib.parse import urlencode
 import requests
 
 from sof_wrapper.extensions import oauth
@@ -69,10 +70,43 @@ def authorize():
     response = oauth.sof.get(patient_url)
     response.raise_for_status()
 
-    return {
-        'req': request.args,
+    session['auth_info'] = {
         'token': token,
+
+        # debugging data
+        'req': request.args,
         'patient_data': response.json(),
+    }
+
+    frontend_url = '{launch_dest}?{querystring_params}'.format(
+        launch_dest=current_app.config['LAUNCH_DEST'],
+        querystring_params=urlencode({
+            "iss": "https://launch.smarthealthit.org/v/r2/fhir",
+            "patient": "5c41cecf-cf81-434f-9da7-e24e5a99dbc2",
+        }),
+    )
+
+    current_app.logger.info('redirecting to frontend app: %s', frontend_url)
+    return redirect(frontend_url)
+
+
+@blueprint.route('/auth-info')
+def auth_info():
+    auth_info = session['auth_info']
+
+    return {
+        # from front-end launch-context.json
+        "client_id": "6c12dff4-24e7-4475-a742-b08972c4ea27",
+        "scope": "patient/*.read launch/patient",
+
+        "fakeTokenResponse": {
+            "access_token": auth_info['token']['access_token'],
+            "token_type": "Bearer",
+        },
+        "fhirServiceUrl":"https://launch.smarthealthit.org/v/r2/fhir",
+        "iss":"https://launch.smarthealthit.org/v/r2/fhir",
+        "server":"https://launch.smarthealthit.org/v/r2/fhir",
+        "patientId":"5c41cecf-cf81-434f-9da7-e24e5a99dbc2",
     }
 
 
@@ -88,7 +122,13 @@ def before_request_func():
 
 
 @blueprint.after_request
-def after_request_func(resp):
+def after_request_func(response):
     current_app.logger.info('after_request session: %s', session)
     current_app.logger.info('after_request authlib state present: %s', '_sof_authlib_state_' in session)
-    return resp
+
+    # todo: make configurable
+    origin = request.headers.get('Origin', '*')
+    response.headers['Access-Control-Allow-Origin'] = origin
+    response.headers['Access-Control-Allow-Credentials'] = 'true'
+
+    return response
