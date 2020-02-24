@@ -13,7 +13,6 @@ def medication_order():
     response = requests.get(pdmp_url)
     response.raise_for_status()
     return response.json()
-    #return {'ok':True}
 
 @blueprint.after_request
 def add_header(response):
