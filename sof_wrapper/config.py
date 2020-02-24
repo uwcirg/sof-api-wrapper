@@ -12,3 +12,5 @@ SOF_CLIENT_ID = os.getenv("SOF_CLIENT_ID")
 SOF_CLIENT_SECRET = os.getenv("SOF_CLIENT_SECRET")
 
 LAUNCH_DEST = os.getenv("LAUNCH_DEST")
+
+PDMP_URL = os.getenv("PDMP_URL")

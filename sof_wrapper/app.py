@@ -27,3 +27,4 @@ def register_blueprints(app):
     """
     app.register_blueprint(auth.views.blueprint)
     app.register_blueprint(api.views.base_blueprint)
+    app.register_blueprint(api.fhir.blueprint)
