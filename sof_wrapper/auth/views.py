@@ -71,8 +71,10 @@ def authorize():
     response.raise_for_status()
 
     session['auth_info'] = {
-        'req': request.args,
         'token': token,
+
+        # debugging data
+        'req': request.args,
         'patient_data': response.json(),
     }
 
@@ -106,19 +108,6 @@ def auth_info():
         "server":"https://launch.smarthealthit.org/v/r2/fhir",
         "patientId":"5c41cecf-cf81-434f-9da7-e24e5a99dbc2",
     }
-
-
-    #token = oauth.sof.authorize_access_token()
-
-    # Brenda Jackson
-    #patient_url = 'https://launch.smarthealthit.org/v/r2/fhir/Patient/5c41cecf-cf81-434f-9da7-e24e5a99dbc2'
-    #response = oauth.sof.get(patient_url)
-    #response.raise_for_status()
-    #return {
-        #'req': request.args,
-        #'token': token,
-        #'patient_data': response.json(),
-    #}
 
 
 @blueprint.route('/users/<int:user_id>')
