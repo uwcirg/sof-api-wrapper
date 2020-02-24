@@ -1,5 +1,6 @@
-from . import views
+from . import views, fhir
 
 __all__ = [
-    'views'
+    'fhir',
+    'views',
 ]
