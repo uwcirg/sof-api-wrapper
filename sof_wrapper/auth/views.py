@@ -15,13 +15,14 @@ def launch():
     set /auth/launch as SoF App Launch URL
     """
     iss = request.args['iss']
+    current_app.logger.debug('iss from EHR: %s', iss)
     session.setdefault('iss', iss)
 
     launch = request.args.get('launch')
     if launch:
         # launch value recieved from EHR
         decoded_launch = base64.b64decode(request.args['launch']+'===')
-        current_app.logger.info('decoded_launch: %s', decoded_launch)
+        current_app.logger.debug('decoded_launch: %s', decoded_launch)
 
     # errors with r4 even if iss and aud params match
     #iss = 'https://launch.smarthealthit.org/v/r2/fhir'
@@ -52,6 +53,7 @@ def launch():
 
     current_app.logger.info('redirecting to EHR Authz. will return to: %s', return_url)
 
+    current_app.logger.debug('passing iss as aud: %s', iss)
     return oauth.sof.authorize_redirect(
         redirect_uri=return_url,
         # SoF requires iss to be passed as aud querystring param
@@ -86,7 +88,7 @@ def authorize():
     response.raise_for_status()
 
     iss = session['iss']
-    current_app.logger.info('iss: %s', iss)
+    current_app.logger.debug('iss from session: %s', iss)
 
     session['auth_info'] = {
         'token': token,
