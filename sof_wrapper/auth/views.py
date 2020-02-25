@@ -92,7 +92,7 @@ def authorize():
 
     session['auth_info'] = {
         'token': token,
-
+        'iss': iss,
         # debugging data
         'req': request.args,
         'patient_data': response.json(),
