@@ -108,6 +108,8 @@ def auth_info():
     auth_info = session['auth_info']
 
     return {
+        'token_data': auth_info['token'],
+
         # from front-end launch-context.json
         "client_id": "6c12dff4-24e7-4475-a742-b08972c4ea27",
         "scope": "patient/*.read launch/patient",
