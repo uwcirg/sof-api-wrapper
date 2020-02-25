@@ -77,6 +77,7 @@ def authorize():
     #if not '_sof_authlib_state_' in session:
         #return 'authlib state cookie missing; restart auth flow', 400
 
+
     token = oauth.sof.authorize_access_token()
 
     # Brenda Jackson
@@ -94,6 +95,8 @@ def authorize():
         'req': request.args,
         'patient_data': response.json(),
     }
+
+
 
     frontend_url = '{launch_dest}?{querystring_params}'.format(
         launch_dest=current_app.config['LAUNCH_DEST'],
