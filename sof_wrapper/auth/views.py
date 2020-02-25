@@ -1,5 +1,6 @@
 from flask import Blueprint, current_app, redirect, request, url_for, session
 from urllib.parse import urlencode
+import base64
 import requests
 
 from sof_wrapper.extensions import oauth
@@ -14,6 +15,13 @@ def launch():
     set /auth/launch as SoF App Launch URL
     """
     iss = request.args['iss']
+
+    launch = request.args.get('launch')
+    if launch:
+        # launch value recieved from EHR
+        decoded_launch = base64.b64decode(request.args['launch']+'===')
+        current_app.logger.info('decoded_launch: %s', decoded_launch)
+
     # errors with r4 even if iss and aud params match
     #iss = 'https://launch.smarthealthit.org/v/r2/fhir'
 
@@ -43,8 +51,13 @@ def launch():
 
     current_app.logger.info('redirecting to EHR Authz. will return to: %s', return_url)
 
-    # SoF requires iss to be passed as aud querystring param
-    return oauth.sof.authorize_redirect(redirect_uri=return_url, aud=iss)
+    return oauth.sof.authorize_redirect(
+        redirect_uri=return_url,
+        # SoF requires iss to be passed as aud querystring param
+        aud=iss, 
+        # must pass launch param back when using EHR launch
+        launch=launch,
+    )
 
 
 @blueprint.route('/authorize')
