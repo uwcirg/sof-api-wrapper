@@ -42,7 +42,7 @@ def launch():
 
         # todo: try using iss
         #api_base_url=iss+'/',
-        #client_kwargs={'scope': 'user:email'},
+        client_kwargs={'scope': "patient/*.read launch/patient"},
     )
 
     # URL to pass (as QS param) to EHR Authz server
