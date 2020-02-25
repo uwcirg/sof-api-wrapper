@@ -1,5 +1,6 @@
 from flask import Blueprint, current_app, redirect, request, url_for, session
 from urllib.parse import urlencode
+import base64
 import requests
 
 from sof_wrapper.extensions import oauth
@@ -14,6 +15,13 @@ def launch():
     set /auth/launch as SoF App Launch URL
     """
     iss = request.args['iss']
+
+    launch = request.args.get('launch')
+    if launch:
+        # launch value recieved from EHR
+        decoded_launch = base64.b64decode(request.args['launch']+'===')
+        current_app.logger.info('decoded_launch: %s', decoded_launch)
+
     # errors with r4 even if iss and aud params match
     #iss = 'https://launch.smarthealthit.org/v/r2/fhir'
 
@@ -34,7 +42,7 @@ def launch():
 
         # todo: try using iss
         #api_base_url=iss+'/',
-        #client_kwargs={'scope': 'user:email'},
+        client_kwargs={'scope': "patient/*.read launch/patient"},
     )
 
     # URL to pass (as QS param) to EHR Authz server
@@ -43,8 +51,13 @@ def launch():
 
     current_app.logger.info('redirecting to EHR Authz. will return to: %s', return_url)
 
-    # SoF requires iss to be passed as aud querystring param
-    return oauth.sof.authorize_redirect(redirect_uri=return_url, aud=iss)
+    return oauth.sof.authorize_redirect(
+        redirect_uri=return_url,
+        # SoF requires iss to be passed as aud querystring param
+        aud=iss, 
+        # must pass launch param back when using EHR launch
+        launch=launch,
+    )
 
 
 @blueprint.route('/authorize')
@@ -82,7 +95,7 @@ def authorize():
         launch_dest=current_app.config['LAUNCH_DEST'],
         querystring_params=urlencode({
             "iss": "https://launch.smarthealthit.org/v/r2/fhir",
-            "patient": "5c41cecf-cf81-434f-9da7-e24e5a99dbc2",
+            "patient": token['patient'],
         }),
     )
 
@@ -95,6 +108,8 @@ def auth_info():
     auth_info = session['auth_info']
 
     return {
+        'token_data': auth_info['token'],
+
         # from front-end launch-context.json
         "client_id": "6c12dff4-24e7-4475-a742-b08972c4ea27",
         "scope": "patient/*.read launch/patient",
@@ -106,7 +121,7 @@ def auth_info():
         "fhirServiceUrl":"https://launch.smarthealthit.org/v/r2/fhir",
         "iss":"https://launch.smarthealthit.org/v/r2/fhir",
         "server":"https://launch.smarthealthit.org/v/r2/fhir",
-        "patientId":"5c41cecf-cf81-434f-9da7-e24e5a99dbc2",
+        "patientId":auth_info['token']['patient'],
     }
 
 
