@@ -95,7 +95,7 @@ def authorize():
         launch_dest=current_app.config['LAUNCH_DEST'],
         querystring_params=urlencode({
             "iss": "https://launch.smarthealthit.org/v/r2/fhir",
-            "patient": "5c41cecf-cf81-434f-9da7-e24e5a99dbc2",
+            "patient": token['patient'],
         }),
     )
 
@@ -119,7 +119,7 @@ def auth_info():
         "fhirServiceUrl":"https://launch.smarthealthit.org/v/r2/fhir",
         "iss":"https://launch.smarthealthit.org/v/r2/fhir",
         "server":"https://launch.smarthealthit.org/v/r2/fhir",
-        "patientId":"5c41cecf-cf81-434f-9da7-e24e5a99dbc2",
+        "patientId":auth_info['token']['patient'],
     }
 
 
