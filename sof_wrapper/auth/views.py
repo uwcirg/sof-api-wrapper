@@ -15,6 +15,7 @@ def launch():
     set /auth/launch as SoF App Launch URL
     """
     iss = request.args['iss']
+    session.setdefault('iss', iss)
 
     launch = request.args.get('launch')
     if launch:
@@ -54,7 +55,7 @@ def launch():
     return oauth.sof.authorize_redirect(
         redirect_uri=return_url,
         # SoF requires iss to be passed as aud querystring param
-        aud=iss, 
+        aud=iss,
         # must pass launch param back when using EHR launch
         launch=launch,
     )
@@ -83,6 +84,9 @@ def authorize():
     response = oauth.sof.get(patient_url)
     response.raise_for_status()
 
+    iss = session['iss']
+    current_app.logger.info('iss: %s', iss)
+
     session['auth_info'] = {
         'token': token,
 
@@ -94,7 +98,7 @@ def authorize():
     frontend_url = '{launch_dest}?{querystring_params}'.format(
         launch_dest=current_app.config['LAUNCH_DEST'],
         querystring_params=urlencode({
-            "iss": "https://launch.smarthealthit.org/v/r2/fhir",
+            "iss": iss,
             "patient": token['patient'],
         }),
     )
@@ -106,7 +110,7 @@ def authorize():
 @blueprint.route('/auth-info')
 def auth_info():
     auth_info = session['auth_info']
-
+    iss = session['auth_info']['iss']
     return {
         'token_data': auth_info['token'],
 
@@ -118,9 +122,9 @@ def auth_info():
             "access_token": auth_info['token']['access_token'],
             "token_type": "Bearer",
         },
-        "fhirServiceUrl":"https://launch.smarthealthit.org/v/r2/fhir",
-        "iss":"https://launch.smarthealthit.org/v/r2/fhir",
-        "server":"https://launch.smarthealthit.org/v/r2/fhir",
+        "fhirServiceUrl": iss,
+        "iss": iss,
+        "server": iss,
         "patientId":auth_info['token']['patient'],
     }
 
