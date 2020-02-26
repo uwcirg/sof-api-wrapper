@@ -19,8 +19,8 @@ def launch():
     launch = request.args.get('launch')
     if launch:
         # launch value recieved from EHR
-        decoded_launch = base64.b64decode(request.args['launch']+'===')
-        current_app.logger.info('decoded_launch: %s', decoded_launch)
+        #decoded_launch = base64.b64decode(request.args['launch']+'===')
+        current_app.logger.info('launch: %s', launch)
 
     # errors with r4 even if iss and aud params match
     #iss = 'https://launch.smarthealthit.org/v/r2/fhir'
