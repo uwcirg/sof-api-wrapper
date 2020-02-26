@@ -15,12 +15,14 @@ def launch():
     set /auth/launch as SoF App Launch URL
     """
     iss = request.args['iss']
+    current_app.logger.debug('iss from EHR: %s', iss)
+    session.setdefault('iss', iss)
 
     launch = request.args.get('launch')
     if launch:
         # launch value recieved from EHR
-        #decoded_launch = base64.b64decode(request.args['launch']+'===')
-        current_app.logger.info('launch: %s', launch)
+        current_app.logger.debug('launch: %s', launch)
+
 
     # errors with r4 even if iss and aud params match
     #iss = 'https://launch.smarthealthit.org/v/r2/fhir'
@@ -51,10 +53,11 @@ def launch():
 
     current_app.logger.info('redirecting to EHR Authz. will return to: %s', return_url)
 
+    current_app.logger.debug('passing iss as aud: %s', iss)
     return oauth.sof.authorize_redirect(
         redirect_uri=return_url,
         # SoF requires iss to be passed as aud querystring param
-        aud=iss, 
+        aud=iss,
         # must pass launch param back when using EHR launch
         launch=launch,
     )
@@ -76,6 +79,7 @@ def authorize():
     #if not '_sof_authlib_state_' in session:
         #return 'authlib state cookie missing; restart auth flow', 400
 
+
     token = oauth.sof.authorize_access_token()
 
     # Brenda Jackson
@@ -83,18 +87,23 @@ def authorize():
     response = oauth.sof.get(patient_url)
     response.raise_for_status()
 
+    iss = session['iss']
+    current_app.logger.debug('iss from session: %s', iss)
+
     session['auth_info'] = {
         'token': token,
-
+        'iss': iss,
         # debugging data
         'req': request.args,
         'patient_data': response.json(),
     }
 
+
+
     frontend_url = '{launch_dest}?{querystring_params}'.format(
         launch_dest=current_app.config['LAUNCH_DEST'],
         querystring_params=urlencode({
-            "iss": "https://launch.smarthealthit.org/v/r2/fhir",
+            "iss": iss,
             "patient": token['patient'],
         }),
     )
@@ -106,7 +115,7 @@ def authorize():
 @blueprint.route('/auth-info')
 def auth_info():
     auth_info = session['auth_info']
-
+    iss = session['auth_info']['iss']
     return {
         'token_data': auth_info['token'],
 
@@ -118,9 +127,9 @@ def auth_info():
             "access_token": auth_info['token']['access_token'],
             "token_type": "Bearer",
         },
-        "fhirServiceUrl":"https://launch.smarthealthit.org/v/r2/fhir",
-        "iss":"https://launch.smarthealthit.org/v/r2/fhir",
-        "server":"https://launch.smarthealthit.org/v/r2/fhir",
+        "fhirServiceUrl": iss,
+        "iss": iss,
+        "server": iss,
         "patientId":auth_info['token']['patient'],
     }
 
