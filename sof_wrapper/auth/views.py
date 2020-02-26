@@ -29,7 +29,7 @@ def launch():
 
     # fetch conformance statement from /metadata
     ehr_metadata_url = '%s/metadata' % iss
-    metadata = requests.get(ehr_metadata_url)
+    metadata = requests.get(ehr_metadata_url, headers={'Accept': 'application/json'})
     metadata_security = metadata.json()['rest'][0]['security']
 
     # todo: use less fragile lookup logic (JSONPath?)
