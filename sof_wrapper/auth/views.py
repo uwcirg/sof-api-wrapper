@@ -46,6 +46,9 @@ def launch():
         #api_base_url=iss+'/',
         client_kwargs={'scope': "patient/*.read launch/patient"},
     )
+    # work around back-end caching of dynamic config values
+    oauth.sof.authorize_url = authorize_url
+    oauth.sof.access_token_url = token_url
 
     # URL to pass (as QS param) to EHR Authz server
     # EHR Authz server will redirect to this URL after authorization
