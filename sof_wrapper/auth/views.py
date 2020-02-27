@@ -86,9 +86,9 @@ def authorize():
     token = oauth.sof.authorize_access_token()
 
     # Brenda Jackson
-    patient_url = 'https://launch.smarthealthit.org/v/r2/fhir/Patient/5c41cecf-cf81-434f-9da7-e24e5a99dbc2'
-    response = oauth.sof.get(patient_url)
-    response.raise_for_status()
+    #patient_url = 'https://launch.smarthealthit.org/v/r2/fhir/Patient/5c41cecf-cf81-434f-9da7-e24e5a99dbc2'
+    #response = oauth.sof.get(patient_url)
+    #response.raise_for_status()
 
     iss = session['iss']
     current_app.logger.debug('iss from session: %s', iss)
@@ -98,7 +98,7 @@ def authorize():
         'iss': iss,
         # debugging data
         'req': request.args,
-        'patient_data': response.json(),
+        #'patient_data': response.json(),
     }
 
 
