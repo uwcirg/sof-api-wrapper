@@ -82,8 +82,9 @@ def authorize():
     #if not '_sof_authlib_state_' in session:
         #return 'authlib state cookie missing; restart auth flow', 400
 
-
-    token = oauth.sof.authorize_access_token()
+    # todo: define fetch_token function that requests JSON (Accept: application/json header)
+    # https://github.com/lepture/authlib/blob/master/authlib/oauth2/client.py#L154
+    token = oauth.sof.authorize_access_token(_format='json')
 
     # Brenda Jackson
     #patient_url = 'https://launch.smarthealthit.org/v/r2/fhir/Patient/5c41cecf-cf81-434f-9da7-e24e5a99dbc2'
