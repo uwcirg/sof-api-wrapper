@@ -8,6 +8,24 @@ from sof_wrapper.extensions import oauth
 
 blueprint = Blueprint('auth', __name__, url_prefix='/auth')
 
+
+def debugging_compliance_fix(session):
+    def _fix(response):
+        current_app.logger.info('access_token request url: %s', response.request.url)
+        current_app.logger.info('access_token request headers: %s', response.request.headers)
+        current_app.logger.info('access_token request body: %s', response.request.body)
+
+
+        current_app.logger.info('access_token response: %s', response)
+        current_app.logger.info('access_token response.status_code: %s', response.status_code)
+        current_app.logger.info('access_token response.content: %s', response.content)
+
+        response.raise_for_status()
+
+        return response
+    session.register_compliance_hook('access_token_response', _fix)
+
+
 @blueprint.route('/launch')
 def launch():
     """
@@ -45,7 +63,7 @@ def launch():
         name='sof',
         access_token_url=token_url,
         authorize_url=authorize_url,
-
+        compliance_fix=debugging_compliance_fix,
         # todo: try using iss
         #api_base_url=iss+'/',
         client_kwargs={'scope': current_app.config['SOF_CLIENT_SCOPES']},
