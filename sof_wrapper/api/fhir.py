@@ -15,7 +15,6 @@ def medication_order():
     return response.json()
 
 
-# /Observation?patient._id=53b07006-f454-ea11-8241-0a0332b55c97
 @blueprint.route('/Observation')
 def observations():
     phr_url = '{base_url}/Observation'.format(
