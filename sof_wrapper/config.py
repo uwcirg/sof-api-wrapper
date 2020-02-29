@@ -16,3 +16,6 @@ SOF_CLIENT_SCOPES = os.getenv("SOF_CLIENT_SCOPES", "patient/*.read launch/patien
 LAUNCH_DEST = os.getenv("LAUNCH_DEST")
 
 PDMP_URL = os.getenv("PDMP_URL")
+
+PHR_URL = os.getenv("PHR_URL")
+PHR_TOKEN = os.getenv("PHR_TOKEN")
