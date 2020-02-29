@@ -48,7 +48,7 @@ def launch():
 
         # todo: try using iss
         #api_base_url=iss+'/',
-        client_kwargs={'scope': "patient/*.read launch/patient"},
+        client_kwargs={'scope': current_app.config['SOF_CLIENT_SCOPES']},
     )
     # work around back-end caching of dynamic config values
     oauth.sof.authorize_url = authorize_url
