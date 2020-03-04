@@ -126,13 +126,7 @@ def authorize():
 
 
 
-    frontend_url = '{launch_dest}?{querystring_params}'.format(
-        launch_dest=current_app.config['LAUNCH_DEST'],
-        querystring_params=urlencode({
-            "iss": iss,
-            "patient": token['patient'],
-        }),
-    )
+    frontend_url = current_app.config['LAUNCH_DEST']
 
     current_app.logger.info('redirecting to frontend app: %s', frontend_url)
     return redirect(frontend_url)
@@ -143,18 +137,14 @@ def auth_info():
     auth_info = session['auth_info']
     iss = session['auth_info']['iss']
     return {
+        # debugging
         'token_data': auth_info['token'],
-
-        "client_id": current_app.config['SOF_CLIENT_ID'],
-        "scope": current_app.config['SOF_CLIENT_SCOPES'],
 
         "fakeTokenResponse": {
             "access_token": auth_info['token']['access_token'],
             "token_type": "Bearer",
         },
         "fhirServiceUrl": iss,
-        "iss": iss,
-        "server": iss,
         "patientId":auth_info['token']['patient'],
     }
 
