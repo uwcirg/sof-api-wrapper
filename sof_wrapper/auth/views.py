@@ -145,9 +145,8 @@ def auth_info():
     return {
         'token_data': auth_info['token'],
 
-        # from front-end launch-context.json
-        "client_id": "6c12dff4-24e7-4475-a742-b08972c4ea27",
-        "scope": "patient/*.read launch/patient",
+        "client_id": current_app.config['SOF_CLIENT_ID'],
+        "scope": current_app.config['SOF_CLIENT_SCOPES'],
 
         "fakeTokenResponse": {
             "access_token": auth_info['token']['access_token'],
