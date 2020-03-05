@@ -136,6 +136,11 @@ def authorize():
 def auth_info():
     auth_info = session['auth_info']
     iss = session['auth_info']['iss']
+
+    # use FHIR r4 if configured with Epic
+    if 'epic' in iss:
+        iss = iss.replace('DSTU2', 'R4')
+
     return {
         # debugging
         'token_data': auth_info['token'],
