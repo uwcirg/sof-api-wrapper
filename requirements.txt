@@ -1,3 +1,4 @@
 authlib
 flask
+python-json-logger
 requests
