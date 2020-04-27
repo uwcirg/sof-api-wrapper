@@ -1,6 +1,4 @@
 from flask import Blueprint, current_app, redirect, request, url_for, session
-from urllib.parse import urlencode
-import base64
 import requests
 
 from sof_wrapper.extensions import oauth
@@ -11,14 +9,18 @@ blueprint = Blueprint('auth', __name__, url_prefix='/auth')
 
 def debugging_compliance_fix(session):
     def _fix(response):
-        current_app.logger.info('access_token request url: %s', response.request.url)
-        current_app.logger.info('access_token request headers: %s', response.request.headers)
-        current_app.logger.info('access_token request body: %s', response.request.body)
+        current_app.logger.debug(
+            'access_token request url: %s', response.request.url)
+        current_app.logger.debug(
+            'access_token request headers: %s', response.request.headers)
+        current_app.logger.debug(
+            'access_token request body: %s', response.request.body)
 
-
-        current_app.logger.info('access_token response: %s', response)
-        current_app.logger.info('access_token response.status_code: %s', response.status_code)
-        current_app.logger.info('access_token response.content: %s', response.content)
+        current_app.logger.debug('access_token response: %s', response)
+        current_app.logger.debug(
+            'access_token response.status_code: %s', response.status_code)
+        current_app.logger.debug(
+            'access_token response.content: %s', response.content)
 
         response.raise_for_status()
 
@@ -38,12 +40,11 @@ def launch():
 
     launch = request.args.get('launch')
     if launch:
-        # launch value recieved from EHR
+        # launch value received from EHR
         current_app.logger.debug('launch: %s', launch)
 
-
     # errors with r4 even if iss and aud params match
-    #iss = 'https://launch.smarthealthit.org/v/r2/fhir'
+    # iss = 'https://launch.smarthealthit.org/v/r2/fhir'
 
     # fetch conformance statement from /metadata
     ehr_metadata_url = '%s/metadata' % iss
@@ -65,7 +66,7 @@ def launch():
         authorize_url=authorize_url,
         compliance_fix=debugging_compliance_fix,
         # todo: try using iss
-        #api_base_url=iss+'/',
+        # api_base_url=iss+'/',
         client_kwargs={'scope': current_app.config['SOF_CLIENT_SCOPES']},
     )
     # work around back-end caching of dynamic config values
@@ -101,8 +102,8 @@ def authorize():
         }
         return error_details, 400
     # authlib persists OAuth client details via secure cookie
-    #if not '_sof_authlib_state_' in session:
-        #return 'authlib state cookie missing; restart auth flow', 400
+    # if not '_sof_authlib_state_' in session:
+        # return 'authlib state cookie missing; restart auth flow', 400
 
     # todo: define fetch_token function that requests JSON (Accept: application/json header)
     # https://github.com/lepture/authlib/blob/master/authlib/oauth2/client.py#L154
@@ -123,8 +124,6 @@ def authorize():
         'req': request.args,
         #'patient_data': response.json(),
     }
-
-
 
     frontend_url = current_app.config['LAUNCH_DEST']
 
@@ -151,19 +150,23 @@ def auth_info():
 
 @blueprint.route('/users/<int:user_id>')
 def users(user_id):
-    return {'ok':True}
+    return {'ok': True}
 
 
 @blueprint.before_request
 def before_request_func():
-    current_app.logger.info('before_request session: %s', session)
-    current_app.logger.info('before_request authlib state present: %s', '_sof_authlib_state_' in session)
+    current_app.logger.debug('before_request session: %s', session)
+    current_app.logger.debug(
+        'before_request authlib state present: %s',
+        '_sof_authlib_state_' in session)
 
 
 @blueprint.after_request
 def after_request_func(response):
-    current_app.logger.info('after_request session: %s', session)
-    current_app.logger.info('after_request authlib state present: %s', '_sof_authlib_state_' in session)
+    current_app.logger.debug('after_request session: %s', session)
+    current_app.logger.debug(
+        'after_request authlib state present: %s',
+        '_sof_authlib_state_' in session)
 
     # todo: make configurable
     origin = request.headers.get('Origin', '*')
