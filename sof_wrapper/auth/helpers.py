@@ -4,6 +4,7 @@ from jose.exceptions import JWTError
 
 def format_as_jwt(encoded_payload):
     """To extract payload from ill formed JWT, package as per protocol"""
+    # base64 encoded string: `{"typ":"JWT","alg":"RS256"}`
     header = 'eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiJ9'
     sig = 'n/a'
     return '.'.join((header, encoded_payload, sig))
@@ -23,4 +24,3 @@ def extract_payload(token):
         # No value seen in recording at this time
         pass
     return payload
-
