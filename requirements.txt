@@ -1,3 +1,6 @@
 authlib
 flask
+pytest
+python-jose[cryptography]
+python-json-logger
 requests

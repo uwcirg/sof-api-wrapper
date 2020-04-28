@@ -1,9 +1,8 @@
 from flask import Blueprint, current_app, redirect, request, url_for, session
-from urllib.parse import urlencode
-import base64
 import requests
 
 from sof_wrapper.extensions import oauth
+from sof_wrapper.auth.helpers import extract_payload
 
 
 blueprint = Blueprint('auth', __name__, url_prefix='/auth')
@@ -11,14 +10,18 @@ blueprint = Blueprint('auth', __name__, url_prefix='/auth')
 
 def debugging_compliance_fix(session):
     def _fix(response):
-        current_app.logger.info('access_token request url: %s', response.request.url)
-        current_app.logger.info('access_token request headers: %s', response.request.headers)
-        current_app.logger.info('access_token request body: %s', response.request.body)
+        current_app.logger.debug(
+            'access_token request url: %s', response.request.url)
+        current_app.logger.debug(
+            'access_token request headers: %s', response.request.headers)
+        current_app.logger.debug(
+            'access_token request body: %s', response.request.body)
 
-
-        current_app.logger.info('access_token response: %s', response)
-        current_app.logger.info('access_token response.status_code: %s', response.status_code)
-        current_app.logger.info('access_token response.content: %s', response.content)
+        current_app.logger.debug('access_token response: %s', response)
+        current_app.logger.debug(
+            'access_token response.status_code: %s', response.status_code)
+        current_app.logger.debug(
+            'access_token response.content: %s', response.content)
 
         response.raise_for_status()
 
@@ -38,12 +41,11 @@ def launch():
 
     launch = request.args.get('launch')
     if launch:
-        # launch value recieved from EHR
+        # launch value received from EHR
         current_app.logger.debug('launch: %s', launch)
 
-
     # errors with r4 even if iss and aud params match
-    #iss = 'https://launch.smarthealthit.org/v/r2/fhir'
+    # iss = 'https://launch.smarthealthit.org/v/r2/fhir'
 
     # fetch conformance statement from /metadata
     ehr_metadata_url = '%s/metadata' % iss
@@ -65,7 +67,7 @@ def launch():
         authorize_url=authorize_url,
         compliance_fix=debugging_compliance_fix,
         # todo: try using iss
-        #api_base_url=iss+'/',
+        # api_base_url=iss+'/',
         client_kwargs={'scope': current_app.config['SOF_CLIENT_SCOPES']},
     )
     # work around back-end caching of dynamic config values
@@ -76,7 +78,13 @@ def launch():
     # EHR Authz server will redirect to this URL after authorization
     return_url = url_for('auth.authorize', _external=True)
 
-    current_app.logger.info('redirecting to EHR Authz. will return to: %s', return_url)
+    current_app.logger.debug('redirecting to EHR Authz. will return to: %s', return_url)
+    token = session.get('auth_info')['token']
+    user = extract_payload(token.get('id_token')).get('profile', '')
+    current_app.logger.info(
+        "launch",
+        extra={'subject': "Patient/{}".format(token.get('patient', '')),
+               'user': user})
 
     current_app.logger.debug('passing iss as aud: %s', iss)
     return oauth.sof.authorize_redirect(
@@ -101,12 +109,17 @@ def authorize():
         }
         return error_details, 400
     # authlib persists OAuth client details via secure cookie
-    #if not '_sof_authlib_state_' in session:
-        #return 'authlib state cookie missing; restart auth flow', 400
+    # if not '_sof_authlib_state_' in session:
+        # return 'authlib state cookie missing; restart auth flow', 400
 
     # todo: define fetch_token function that requests JSON (Accept: application/json header)
     # https://github.com/lepture/authlib/blob/master/authlib/oauth2/client.py#L154
     token = oauth.sof.authorize_access_token(_format='json')
+    user = extract_payload(token.get('id_token')).get('profile', '')
+    current_app.logger.info(
+        "login",
+        extra={'subject': "Patient/{}".format(token.get('patient', '')),
+               'user': user})
 
     # Brenda Jackson
     #patient_url = 'https://launch.smarthealthit.org/v/r2/fhir/Patient/5c41cecf-cf81-434f-9da7-e24e5a99dbc2'
@@ -123,8 +136,6 @@ def authorize():
         'req': request.args,
         #'patient_data': response.json(),
     }
-
-
 
     frontend_url = current_app.config['LAUNCH_DEST']
 
@@ -151,19 +162,23 @@ def auth_info():
 
 @blueprint.route('/users/<int:user_id>')
 def users(user_id):
-    return {'ok':True}
+    return {'ok': True}
 
 
 @blueprint.before_request
 def before_request_func():
-    current_app.logger.info('before_request session: %s', session)
-    current_app.logger.info('before_request authlib state present: %s', '_sof_authlib_state_' in session)
+    current_app.logger.debug('before_request session: %s', session)
+    current_app.logger.debug(
+        'before_request authlib state present: %s',
+        '_sof_authlib_state_' in session)
 
 
 @blueprint.after_request
 def after_request_func(response):
-    current_app.logger.info('after_request session: %s', session)
-    current_app.logger.info('after_request authlib state present: %s', '_sof_authlib_state_' in session)
+    current_app.logger.debug('after_request session: %s', session)
+    current_app.logger.debug(
+        'after_request authlib state present: %s',
+        '_sof_authlib_state_' in session)
 
     # todo: make configurable
     origin = request.headers.get('Origin', '*')

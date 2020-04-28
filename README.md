@@ -38,6 +38,13 @@ Read application logs
     docker-compose logs --follow
 
 
+Test
+----
+Without a ``setup.py`` to install, invoke as follows from the root directory to
+automatically include the current directory in ``PYTHONPATH``
+
+    python -m pytest tests
+
 License
 -------
 BSD

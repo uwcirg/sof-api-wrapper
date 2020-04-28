@@ -1,3 +1,4 @@
+from logging import config as logging_config
 from flask import Flask
 
 from sof_wrapper import auth, api
@@ -10,10 +11,16 @@ def create_app(testing=False, cli=False):
     app = Flask('sof_wrapper')
     app.config.from_object('sof_wrapper.config')
 
+    configure_logging(app)
     configure_extensions(app, cli)
     register_blueprints(app)
 
     return app
+
+
+def configure_logging(app):
+    app.logger  # must call to initialize prior to config or it'll replace
+    logging_config.fileConfig('logging.ini', disable_existing_loggers=False)
 
 
 def configure_extensions(app, cli):
