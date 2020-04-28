@@ -1,5 +1,10 @@
 from pytest import fixture
-from sof_wrapper.auth.helpers import extract_payload
+from sof_wrapper.auth.helpers import extract_payload, format_as_jwt
+
+@fixture
+def encoded_payload():
+    # base64 encoded: {"a":"1","b":"41702","e":"SMART-1234"}
+    return 'eyJhIjoiMSIsImIiOiI0MTcwMiIsImUiOiJTTUFSVC0xMjM0In0'
 
 
 @fixture
@@ -23,3 +28,15 @@ def test_extract(example_token):
     extracted = extract_payload(example_token)
     assert 'profile' in extracted
     assert extracted['profile'] == 'Practitioner/SMART-1234'
+
+
+def test_enc_payload_extract(encoded_payload):
+    jwt = format_as_jwt(encoded_payload)
+    assert len(jwt.split('.')) == 3
+    assert extract_payload(jwt) == {'a': '1', 'b': '41702', 'e': 'SMART-1234'}
+
+
+def test_bad_extract():
+    jwt = format_as_jwt('ill formed string')
+    assert len(jwt.split('.')) == 3
+    assert extract_payload(jwt) == {}
