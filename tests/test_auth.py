@@ -3,6 +3,7 @@ from sof_wrapper.auth.helpers import extract_payload, format_as_jwt
 
 @fixture
 def encoded_payload():
+    # base64 encoded: {"a":"1","b":"41702","e":"SMART-1234"}
     return 'eyJhIjoiMSIsImIiOiI0MTcwMiIsImUiOiJTTUFSVC0xMjM0In0'
 
 
