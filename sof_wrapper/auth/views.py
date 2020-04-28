@@ -2,7 +2,7 @@ from flask import Blueprint, current_app, redirect, request, url_for, session
 import requests
 
 from sof_wrapper.extensions import oauth
-from sof_wrapper.auth.helpers import extract_payload
+from sof_wrapper.auth.helpers import extract_payload, format_as_jwt
 
 
 blueprint = Blueprint('auth', __name__, url_prefix='/auth')
@@ -44,6 +44,18 @@ def launch():
         # launch value received from EHR
         current_app.logger.debug('launch: %s', launch)
 
+        # Extract user and subject from encoded launch parameter if found
+        # NB this is documented to be ``an opaque handle to the EHR context
+        # is passed along to the app as part of the launch URL``, but
+        # in practice includes easy to decode data.
+        payload = extract_payload(format_as_jwt(launch))
+        extra = {}
+        if "b" in payload:
+            extra['subject'] = "Patient/{}".format(payload['b'])
+        if "e" in payload:
+            extra['user'] = "Provider/{}".format(payload['e'])
+        current_app.logger.info("launch", extra=extra)
+
     # errors with r4 even if iss and aud params match
     # iss = 'https://launch.smarthealthit.org/v/r2/fhir'
 
@@ -79,12 +91,6 @@ def launch():
     return_url = url_for('auth.authorize', _external=True)
 
     current_app.logger.debug('redirecting to EHR Authz. will return to: %s', return_url)
-    token = session.get('auth_info')['token']
-    user = extract_payload(token.get('id_token')).get('profile', '')
-    current_app.logger.info(
-        "launch",
-        extra={'subject': "Patient/{}".format(token.get('patient', '')),
-               'user': user})
 
     current_app.logger.debug('passing iss as aud: %s', iss)
     return oauth.sof.authorize_redirect(
@@ -116,10 +122,12 @@ def authorize():
     # https://github.com/lepture/authlib/blob/master/authlib/oauth2/client.py#L154
     token = oauth.sof.authorize_access_token(_format='json')
     user = extract_payload(token.get('id_token')).get('profile', '')
-    current_app.logger.info(
-        "login",
-        extra={'subject': "Patient/{}".format(token.get('patient', '')),
-               'user': user})
+    extra = {}
+    if user:
+        extra['user'] = user
+    if 'patient' in token:
+        extra['subject'] = 'Patient/{}'.format(token['patient'])
+    current_app.logger.info("login", extra=extra)
 
     # Brenda Jackson
     #patient_url = 'https://launch.smarthealthit.org/v/r2/fhir/Patient/5c41cecf-cf81-434f-9da7-e24e5a99dbc2'
