@@ -2,6 +2,7 @@ from flask import Blueprint, current_app, redirect, request, url_for, session
 import requests
 
 from sof_wrapper.extensions import oauth
+from sof_wrapper.auth.helpers import extract_payload
 
 
 blueprint = Blueprint('auth', __name__, url_prefix='/auth')
@@ -77,7 +78,13 @@ def launch():
     # EHR Authz server will redirect to this URL after authorization
     return_url = url_for('auth.authorize', _external=True)
 
-    current_app.logger.info('redirecting to EHR Authz. will return to: %s', return_url)
+    current_app.logger.debug('redirecting to EHR Authz. will return to: %s', return_url)
+    token = session.get('auth_info')['token']
+    user = extract_payload(token.get('id_token')).get('profile', '')
+    current_app.logger.info(
+        "launch",
+        extra={'subject': "Patient/{}".format(token.get('patient', '')),
+               'user': user})
 
     current_app.logger.debug('passing iss as aud: %s', iss)
     return oauth.sof.authorize_redirect(
@@ -108,6 +115,11 @@ def authorize():
     # todo: define fetch_token function that requests JSON (Accept: application/json header)
     # https://github.com/lepture/authlib/blob/master/authlib/oauth2/client.py#L154
     token = oauth.sof.authorize_access_token(_format='json')
+    user = extract_payload(token.get('id_token')).get('profile', '')
+    current_app.logger.info(
+        "login",
+        extra={'subject': "Patient/{}".format(token.get('patient', '')),
+               'user': user})
 
     # Brenda Jackson
     #patient_url = 'https://launch.smarthealthit.org/v/r2/fhir/Patient/5c41cecf-cf81-434f-9da7-e24e5a99dbc2'
