@@ -9,7 +9,7 @@ COPY . .
 
 EXPOSE 5000
 
-ENV FLASK_APP=sof_wrapper/wsgi:application \
+ENV FLASK_APP=sof_wrapper.wsgi \
     FLASK_ENV=development
 
 CMD flask run --host 0.0.0.0
