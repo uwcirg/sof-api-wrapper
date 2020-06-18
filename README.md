@@ -2,6 +2,8 @@ SMART-on-FHIR Proxy
 ===================
 SMART-on-FHIR confidential client and proxy
 
+
+[![Docker Image Version (latest semver)](https://img.shields.io/docker/v/uwcirg/sof-api-wrapper?label=latest%20release&sort=semver)](https://hub.docker.com/repository/docker/uwcirg/sof-api-wrapper)
 Launch
 ------
 To start an EHR launch follow the below steps

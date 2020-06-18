@@ -2,6 +2,7 @@
 version: "3.4"
 services:
   sof_wrapper:
+    image: "uwcirg/sof-api-wrapper:${DOCKER_IMAGE_TAG:-develop}"
     build:
       context: .
     volumes:
