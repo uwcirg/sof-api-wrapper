@@ -14,7 +14,7 @@ def create_app(testing=False, cli=False):
 
     configure_logging(app)
     configure_extensions(app, cli)
-    configure_proxyfix(app)
+    app = configure_proxyfix(app)
     register_blueprints(app)
 
     return app
@@ -37,6 +37,7 @@ def configure_proxyfix(app):
     # traefik sets the following headers
     # X-Forwarded-For, X-Forwarded-Host, X-Forwarded-Port, X-Forwarded-Proto, X-Forwarded-Server, X-Real-Ip
     app = ProxyFix(app, x_for=1, x_host=1, x_port=1)
+    return app
 
 
 def register_blueprints(app):
