@@ -1,5 +1,6 @@
 from logging import config as logging_config
 from flask import Flask
+from werkzeug.middleware.proxy_fix import ProxyFix
 
 from sof_wrapper import auth, api
 from sof_wrapper.extensions import oauth
@@ -13,6 +14,7 @@ def create_app(testing=False, cli=False):
 
     configure_logging(app)
     configure_extensions(app, cli)
+    configure_proxyfix(app)
     register_blueprints(app)
 
     return app
@@ -27,6 +29,14 @@ def configure_extensions(app, cli):
     """configure flask extensions
     """
     oauth.init_app(app)
+
+
+def configure_proxyfix(app):
+    """configure flask to read forwarded headers
+    """
+    # traefik sets the following headers
+    # X-Forwarded-For, X-Forwarded-Host, X-Forwarded-Port, X-Forwarded-Proto, X-Forwarded-Server, X-Real-Ip
+    app = ProxyFix(app, x_for=1, x_host=1, x_port=1)
 
 
 def register_blueprints(app):
