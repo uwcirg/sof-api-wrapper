@@ -73,6 +73,7 @@ def launch():
         if launch_token_provider:
             extra_log_params['user'] = f"Provider/{launch_token_provider}"
         current_app.logger.info("launch", extra=extra_log_params)
+        session.setdefault('launch_token_patient', launch_token_patient)
 
     # fetch conformance statement from /metadata
     ehr_metadata_url = '%s/metadata' % iss
@@ -170,7 +171,8 @@ def auth_info():
             "token_type": "Bearer",
         },
         "fhirServiceUrl": iss,
-        "patientId":token_response['patient'],
+        # fallback to patient obtained from non-opaque (non-standard) launch token
+        "patientId":token_response.get('patient', launch_token_patient),
     }
 
 
