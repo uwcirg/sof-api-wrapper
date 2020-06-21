@@ -135,25 +135,20 @@ def authorize():
 
     # todo: define fetch_token function that requests JSON (Accept: application/json header)
     # https://github.com/lepture/authlib/blob/master/authlib/oauth2/client.py#L154
-    token = oauth.sof.authorize_access_token(_format='json')
-    user = extract_payload(token.get('id_token')).get('profile', '')
+    token_response = oauth.sof.authorize_access_token(_format='json')
+    user = extract_payload(token_response.get('id_token')).get('profile', '')
     extra = {}
     if user:
         extra['user'] = user
-    if 'patient' in token:
-        extra['subject'] = 'Patient/{}'.format(token['patient'])
+    if 'patient' in token_response:
+        extra['subject'] = 'Patient/{}'.format(token_response['patient'])
     current_app.logger.info("login", extra=extra)
 
 
     iss = session['iss']
     current_app.logger.debug('iss from session: %s', iss)
 
-    session['auth_info'] = {
-        'token': token,
-        'iss': iss,
-        # debugging data
-        'req': request.args,
-    }
+    session['token_response'] = token_response
 
     frontend_url = current_app.config['LAUNCH_DEST']
 
@@ -163,18 +158,19 @@ def authorize():
 
 @blueprint.route('/auth-info')
 def auth_info():
-    auth_info = session['auth_info']
-    iss = session['auth_info']['iss']
+    token_response = session['token_response']
+    iss = session['iss']
+    launch_token_patient = session['launch_token_patient']
     return {
         # debugging
-        'token_data': auth_info['token'],
+        'token_data': auth_info['token_response'],
 
         "fakeTokenResponse": {
-            "access_token": auth_info['token']['access_token'],
+            "access_token": token_response['access_token'],
             "token_type": "Bearer",
         },
         "fhirServiceUrl": iss,
-        "patientId":auth_info['token']['patient'],
+        "patientId":token_response['patient'],
     }
 
 
