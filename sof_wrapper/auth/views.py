@@ -184,17 +184,13 @@ def users(user_id):
 @blueprint.before_request
 def before_request_func():
     current_app.logger.debug('before_request session: %s', session)
-    current_app.logger.debug(
-        'before_request authlib state present: %s',
-        '_sof_authlib_state_' in session)
+    current_app.logger.debug('before_request authlib state present: %s','_sof_authlib_state_' in session)
 
 
 @blueprint.after_request
 def after_request_func(response):
     current_app.logger.debug('after_request session: %s', session)
-    current_app.logger.debug(
-        'after_request authlib state present: %s',
-        '_sof_authlib_state_' in session)
+    current_app.logger.debug('after_request authlib state present: %s','_sof_authlib_state_' in session)
 
     # todo: make configurable
     origin = request.headers.get('Origin', '*')
