@@ -82,11 +82,17 @@ def launch():
         headers={'Accept': 'application/json'},
     )
     metadata.raise_for_status()
-    metadata_security = metadata.json()['rest'][0]['security']
+    metadata_security = metadata.json()['rest'][0].get('security')
 
-    # todo: use less fragile lookup logic (JSONPath?)
-    authorize_url = metadata_security['extension'][0]['extension'][0]['valueUri']
-    token_url = metadata_security['extension'][0]['extension'][1]['valueUri']
+    # default to config values (in case SoF dynamic configuration fails)
+    authorize_url = current_app.config.get('SOF_AUTHORIZE_URL')
+    token_url = current_app.config.get('SOF_ACCESS_TOKEN_URL')
+
+    # dynamic configuration
+    if metadata_security:
+        # todo: use less fragile lookup logic (JSONPath?)
+        authorize_url = metadata_security['extension'][0]['extension'][0]['valueUri']
+        token_url = metadata_security['extension'][0]['extension'][1]['valueUri']
 
     # set client id and secret from flask config
     oauth.register(

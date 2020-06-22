@@ -12,6 +12,9 @@ SOF_CLIENT_ID = os.getenv("SOF_CLIENT_ID")
 SOF_CLIENT_SECRET = os.getenv("SOF_CLIENT_SECRET")
 SOF_CLIENT_SCOPES = os.getenv("SOF_CLIENT_SCOPES", "patient/*.read launch/patient")
 
+SOF_ACCESS_TOKEN_URL = os.getenv("SOF_ACCESS_TOKEN_URL")
+SOF_AUTHORIZE_URL = os.getenv("SOF_AUTHORIZE_URL")
+
 
 LAUNCH_DEST = os.getenv("LAUNCH_DEST")
 
