@@ -164,7 +164,7 @@ def auth_info():
     launch_token_patient = session['launch_token_patient']
     return {
         # debugging
-        'token_data': auth_info['token_response'],
+        'token_data': token_response,
 
         "fakeTokenResponse": {
             "access_token": token_response['access_token'],
