@@ -5,23 +5,37 @@ from sof_wrapper.extensions import oauth
 from sof_wrapper.auth.helpers import extract_payload, format_as_jwt
 
 
+# SMIT launch token encoding scheme
+# https://github.com/smart-on-fhir/smart-launcher/blob/master/static/codec.js#L4-L17
+# launch tokens are typically opaque to the SoF client app
+LAUNCH_VALUE_TO_CODE = {
+    "launch_ehr": "a",
+    "patient": "b",
+    "encounter": "c",
+    "auth_error": "d",
+    "provider": "e",
+    "sim_ehr": "f",
+    "select_encounter": "g",
+    "launch_prov": "h",
+    "skip_login": "i",
+    "skip_auth": "j",
+    "launch_pt": "k",
+    "launch_cds": "l",
+}
+
+
 blueprint = Blueprint('auth', __name__, url_prefix='/auth')
 
 
 def debugging_compliance_fix(session):
     def _fix(response):
-        current_app.logger.debug(
-            'access_token request url: %s', response.request.url)
-        current_app.logger.debug(
-            'access_token request headers: %s', response.request.headers)
-        current_app.logger.debug(
-            'access_token request body: %s', response.request.body)
+        current_app.logger.debug('access_token request url: %s', response.request.url)
+        current_app.logger.debug('access_token request headers: %s', response.request.headers)
+        current_app.logger.debug('access_token request body: %s', response.request.body)
 
         current_app.logger.debug('access_token response: %s', response)
-        current_app.logger.debug(
-            'access_token response.status_code: %s', response.status_code)
-        current_app.logger.debug(
-            'access_token response.content: %s', response.content)
+        current_app.logger.debug('access_token response.status_code: %s', response.status_code)
+        current_app.logger.debug('access_token response.content: %s', response.content)
 
         response.raise_for_status()
 
@@ -46,18 +60,20 @@ def launch():
 
         # Extract user and subject from encoded launch parameter if found
         # NB this is documented to be ``an opaque handle to the EHR context
-        # is passed along to the app as part of the launch URL``, but
-        # in practice includes easy to decode data.
+        # is passed along to the app as part of the launch URL``
+        # the SMIT Sandbox (and Cosri SoF host) use a base64 encoded JSON object
         payload = extract_payload(format_as_jwt(launch))
-        extra = {}
-        if "b" in payload:
-            extra['subject'] = "Patient/{}".format(payload['b'])
-        if "e" in payload:
-            extra['user'] = "Provider/{}".format(payload['e'])
-        current_app.logger.info("launch", extra=extra)
 
-    # errors with r4 even if iss and aud params match
-    # iss = 'https://launch.smarthealthit.org/v/r2/fhir'
+        extra_log_params = {}
+        launch_token_patient = payload.get(LAUNCH_VALUE_TO_CODE['patient'])
+        if launch_token_patient:
+            extra_log_params['subject'] = f"Patient/{launch_token_patient}"
+
+        launch_token_provider = payload.get(LAUNCH_VALUE_TO_CODE['provider'])
+        if launch_token_provider:
+            extra_log_params['user'] = f"Provider/{launch_token_provider}"
+        current_app.logger.info("launch", extra=extra_log_params)
+        session.setdefault('launch_token_patient', launch_token_patient)
 
     # fetch conformance statement from /metadata
     ehr_metadata_url = '%s/metadata' % iss
@@ -86,15 +102,15 @@ def launch():
     oauth.sof.authorize_url = authorize_url
     oauth.sof.access_token_url = token_url
 
-    # URL to pass (as QS param) to EHR Authz server
+    # redirect URL to pass (as QS param) to EHR Authz server
     # EHR Authz server will redirect to this URL after authorization
-    return_url = url_for('auth.authorize', _external=True)
+    redirect_url = url_for('auth.authorize', _external=True)
 
-    current_app.logger.debug('redirecting to EHR Authz. will return to: %s', return_url)
+    current_app.logger.debug('redirecting to EHR Authz. will return to: %s', redirect_url)
 
     current_app.logger.debug('passing iss as aud: %s', iss)
     return oauth.sof.authorize_redirect(
-        redirect_uri=return_url,
+        redirect_uri=redirect_url,
         # SoF requires iss to be passed as aud querystring param
         aud=iss,
         # must pass launch param back when using EHR launch
@@ -120,30 +136,20 @@ def authorize():
 
     # todo: define fetch_token function that requests JSON (Accept: application/json header)
     # https://github.com/lepture/authlib/blob/master/authlib/oauth2/client.py#L154
-    token = oauth.sof.authorize_access_token(_format='json')
-    user = extract_payload(token.get('id_token')).get('profile', '')
+    token_response = oauth.sof.authorize_access_token(_format='json')
+    user = extract_payload(token_response.get('id_token')).get('profile', '')
     extra = {}
     if user:
         extra['user'] = user
-    if 'patient' in token:
-        extra['subject'] = 'Patient/{}'.format(token['patient'])
+    if 'patient' in token_response:
+        extra['subject'] = 'Patient/{}'.format(token_response['patient'])
     current_app.logger.info("login", extra=extra)
 
-    # Brenda Jackson
-    #patient_url = 'https://launch.smarthealthit.org/v/r2/fhir/Patient/5c41cecf-cf81-434f-9da7-e24e5a99dbc2'
-    #response = oauth.sof.get(patient_url)
-    #response.raise_for_status()
 
     iss = session['iss']
     current_app.logger.debug('iss from session: %s', iss)
 
-    session['auth_info'] = {
-        'token': token,
-        'iss': iss,
-        # debugging data
-        'req': request.args,
-        #'patient_data': response.json(),
-    }
+    session['token_response'] = token_response
 
     frontend_url = current_app.config['LAUNCH_DEST']
 
@@ -153,18 +159,20 @@ def authorize():
 
 @blueprint.route('/auth-info')
 def auth_info():
-    auth_info = session['auth_info']
-    iss = session['auth_info']['iss']
+    token_response = session['token_response']
+    iss = session['iss']
+    launch_token_patient = session['launch_token_patient']
     return {
         # debugging
-        'token_data': auth_info['token'],
+        'token_data': token_response,
 
         "fakeTokenResponse": {
-            "access_token": auth_info['token']['access_token'],
+            "access_token": token_response['access_token'],
             "token_type": "Bearer",
         },
         "fhirServiceUrl": iss,
-        "patientId":auth_info['token']['patient'],
+        # fallback to patient obtained from non-opaque (non-standard) launch token
+        "patientId":token_response.get('patient', launch_token_patient),
     }
 
 
@@ -176,17 +184,13 @@ def users(user_id):
 @blueprint.before_request
 def before_request_func():
     current_app.logger.debug('before_request session: %s', session)
-    current_app.logger.debug(
-        'before_request authlib state present: %s',
-        '_sof_authlib_state_' in session)
+    current_app.logger.debug('before_request authlib state present: %s','_sof_authlib_state_' in session)
 
 
 @blueprint.after_request
 def after_request_func(response):
     current_app.logger.debug('after_request session: %s', session)
-    current_app.logger.debug(
-        'after_request authlib state present: %s',
-        '_sof_authlib_state_' in session)
+    current_app.logger.debug('after_request authlib state present: %s','_sof_authlib_state_' in session)
 
     # todo: make configurable
     origin = request.headers.get('Origin', '*')
