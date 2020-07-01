@@ -17,15 +17,10 @@ def medication_order():
 
 @blueprint.route('/Observation')
 def observations():
-    phr_url = '{base_url}/Observation'.format(
-        base_url=current_app.config['PHR_URL'],
-    )
-    # todo: lookup from frontend with Patient details
-    phr_params = {'patient._id': '53b07006-f454-ea11-8241-0a0332b55c97'}
+    phr_url = current_app.config['PHR_URL']
 
     phr_observations = requests.get(
         url=phr_url,
-        params=phr_params,
         headers={
             'Authorization': 'Bearer %s' % current_app.config['PHR_TOKEN'],
             'Accept': 'application/json',
