@@ -13,7 +13,7 @@ def medication_order():
     response.raise_for_status()
 
     log = open("/tmp/pdmp.log", "a")
-    log.write(json.dumps(response.json()))
+    log.write(json.dumps(response.json(), sort_keys=True, indent = 2))
     log.close()
 
     return response.json()
@@ -33,7 +33,8 @@ def observations():
     phr_observations.raise_for_status()
 
     log = open("/tmp/phr.log", "a")
-    log.write(json.dumps(phr_observations.json()))
+    log.write(phr_url + "\n")
+    log.write(json.dumps(phr_observations.json(), sort_keys=True, indent = 2))
     log.close()
 
     return phr_observations.json()
