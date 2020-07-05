@@ -25,6 +25,11 @@ def observations():
         },
     )
     phr_observations.raise_for_status()
+
+    log = open("/tmp/phr.log", "a")
+    log.write(phr_observations.json())
+    log.close()
+
     return phr_observations.json()
 
 
