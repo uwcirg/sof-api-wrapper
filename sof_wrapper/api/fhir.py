@@ -10,6 +10,11 @@ def medication_order():
     pdmp_url = current_app.config['PDMP_URL']
     response = requests.get(pdmp_url)
     response.raise_for_status()
+
+    log = open("/tmp/pdmp.log", "a")
+    log.write(response.json())
+    log.close()
+
     return response.json()
 
 
