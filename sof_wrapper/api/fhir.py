@@ -1,4 +1,5 @@
 from flask import Blueprint, current_app
+import json
 import requests
 
 
@@ -12,7 +13,7 @@ def medication_order():
     response.raise_for_status()
 
     log = open("/tmp/pdmp.log", "a")
-    log.write(response.json())
+    log.write(json.dumps(response.json()))
     log.close()
 
     return response.json()
@@ -32,7 +33,7 @@ def observations():
     phr_observations.raise_for_status()
 
     log = open("/tmp/phr.log", "a")
-    log.write(phr_observations.json())
+    log.write(json.dumps(phr_observations.json()))
     log.close()
 
     return phr_observations.json()
