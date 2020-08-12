@@ -2,7 +2,7 @@ from logging import config as logging_config
 from flask import Flask
 
 from sof_wrapper import auth, api
-from sof_wrapper.extensions import oauth
+from sof_wrapper.extensions import oauth, sess
 
 
 def create_app(testing=False, cli=False):
@@ -27,6 +27,7 @@ def configure_extensions(app, cli):
     """configure flask extensions
     """
     oauth.init_app(app)
+    sess.init_app(app)
 
 
 def register_blueprints(app):

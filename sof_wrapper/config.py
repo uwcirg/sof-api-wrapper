@@ -3,10 +3,13 @@
 Use env var to override
 """
 import os
+import redis
 
 SERVER_NAME = os.getenv("SERVER_NAME")
 SECRET_KEY = os.getenv("SECRET_KEY")
 
+SESSION_TYPE = os.getenv("SESSION_TYPE", 'redis')
+SESSION_REDIS = redis.from_url(os.getenv("SESSION_REDIS", "redis://127.0.0.1:6379"))
 
 SOF_CLIENT_ID = os.getenv("SOF_CLIENT_ID")
 SOF_CLIENT_SECRET = os.getenv("SOF_CLIENT_SECRET")
