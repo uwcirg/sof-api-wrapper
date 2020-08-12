@@ -1,10 +1,28 @@
 # docker continuous delivery
 # deliver docker images to configured repo with tags to match branches and git tags
 ---
-name: Publish Docker
+name: Test & Build/Deliver
 on: [push]
 jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v1
+
+      - name: Set up Python 3.7
+        uses: actions/setup-python@v1
+        with:
+          python-version: 3.7
+
+      - name: Install test runner
+        run: python3 -m pip install tox
+
+      - name: Run tests
+        run: tox
+
   build:
+    # only build if tests pass
+    # needs: [test]
     runs-on: ubuntu-latest
     steps:
       - name: Checkout git commit
