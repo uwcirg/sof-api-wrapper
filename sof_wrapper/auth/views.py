@@ -51,7 +51,7 @@ def launch():
     """
     iss = request.args['iss']
     current_app.logger.debug('iss from EHR: %s', iss)
-    session.setdefault('iss', iss)
+    session['iss'] = iss
 
     launch = request.args.get('launch')
     if launch:
@@ -73,7 +73,7 @@ def launch():
         if launch_token_provider:
             extra_log_params['user'] = f"Provider/{launch_token_provider}"
         current_app.logger.info("launch", extra=extra_log_params)
-        session.setdefault('launch_token_patient', launch_token_patient)
+        session['launch_token_patient'] = launch_token_patient
 
     # fetch conformance statement from /metadata
     ehr_metadata_url = '%s/metadata' % iss
