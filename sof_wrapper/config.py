@@ -7,6 +7,8 @@ import redis
 
 SERVER_NAME = os.getenv("SERVER_NAME")
 SECRET_KEY = os.getenv("SECRET_KEY")
+# URL scheme to use outside of request context
+PREFERRED_URL_SCHEME = os.getenv("PREFERRED_URL_SCHEME")
 
 SESSION_TYPE = os.getenv("SESSION_TYPE", 'redis')
 SESSION_REDIS = redis.from_url(os.getenv("SESSION_REDIS", "redis://127.0.0.1:6379"))
