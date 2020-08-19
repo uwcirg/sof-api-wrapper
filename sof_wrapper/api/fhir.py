@@ -1,8 +1,45 @@
-from flask import Blueprint, current_app
+from flask import Blueprint, current_app, session
 import requests
 
 
 blueprint = Blueprint('fhir', __name__, url_prefix='/v/r2/fhir/')
+
+
+def collate_results(*result_sets):
+    """Compile given result sets into a single bundle"""
+    results = {'resourceType': 'Bundle', 'entry': []}
+
+    for rs in result_sets:
+        results['entry'].extend(rs['entry'])
+
+    results['total'] = len(results['entry'])
+    return results
+
+
+@blueprint.route('/emr/MedicationRequest')
+def emr_med_requests():
+    base_url = session['iss']
+    emr_url = f'{base_url}/MedicationRequest'
+    response = requests.get(emr_url)
+    response.raise_for_status()
+    return response.json()
+
+
+@blueprint.route('/pdmp/MedicationRequest')
+def pdmp_med_requests():
+    # PDMP refers to r4 MedicationRequest as MedicationOrder
+    pdmp_url = '{base_url}/v/r4/fhir/MedicationOrder'.format(
+        base_url=current_app.config['PDMP_URL'],
+    )
+    response = requests.get(pdmp_url)
+    response.raise_for_status()
+    return response.json()
+
+
+@blueprint.route('/MedicationRequest')
+def medication_requests():
+    """Return compiled list of MedicationRequests from available endpoints"""
+    return collate_results((pdmp_med_requests(), emr_med_requests()))
 
 
 @blueprint.route('/MedicationOrder')
