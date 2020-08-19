@@ -2,3 +2,7 @@ __pycache__
 *.env
 .eggs
 .tox
+coverage.xml
+sof_wrapper.egg-info
+tests/.coverage
+
