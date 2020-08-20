@@ -138,6 +138,34 @@ def patient_by_id(id):
     return patient_fhir
 
 
+@blueprint.route('/fhir-router/', defaults={'relative_path': ''})
+@blueprint.route('/fhir-router/<path:relative_path>')
+def route_fhir(relative_path):
+    paths = relative_path.split('/')
+    resource_name = paths.pop()
+
+    route_map = {
+    }
+
+
+    if resource_name in route_map:
+        return route_map[resource_name]()
+
+    upstream_fhir_base_url = session['iss']
+    upstream_fhir_url = '/'.join((upstream_fhir_base_url, relative_path))
+    upstream_headers = {}
+    if 'Authorization' in request.headers:
+        upstream_headers = {'Authorization': request.headers['Authorization']}
+
+    upstream_response = requests.get(
+        url=upstream_fhir_url,
+        headers=upstream_headers,
+        params=request.args,
+    )
+    upstream_response.raise_for_status()
+    return upstream_response.json()
+
+
 @blueprint.after_request
 def add_header(response):
     response.headers['Access-Control-Allow-Origin'] = '*'

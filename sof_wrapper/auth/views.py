@@ -176,7 +176,8 @@ def auth_info():
             "access_token": token_response['access_token'],
             "token_type": "Bearer",
         },
-        "fhirServiceUrl": iss,
+        "realFhirServiceUrl": iss,
+        "fhirServiceUrl": url_for('fhir.route_fhir', _external=True),
         # fallback to patient obtained from non-opaque (non-standard) launch token
         "patientId":token_response.get('patient', launch_token_patient),
     }
