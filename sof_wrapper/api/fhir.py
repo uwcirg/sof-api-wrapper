@@ -2,7 +2,9 @@ from flask import Blueprint, current_app, session
 import requests
 
 
-blueprint = Blueprint('fhir', __name__, url_prefix='/v/r2/fhir/')
+blueprint = Blueprint('fhir', __name__)
+r2prefix = '/v/r2/fhir'
+r4prefix = '/v/r4/fhir'
 
 
 def collate_results(*result_sets):
@@ -16,7 +18,7 @@ def collate_results(*result_sets):
     return results
 
 
-@blueprint.route('/emr/MedicationRequest')
+@blueprint.route(f'{r4prefix}/emr/MedicationRequest')
 def emr_med_requests():
     base_url = session['iss']
     emr_url = f'{base_url}/MedicationRequest'
@@ -25,7 +27,7 @@ def emr_med_requests():
     return response.json()
 
 
-@blueprint.route('/pdmp/MedicationRequest')
+@blueprint.route(f'{r4prefix}/pdmp/MedicationRequest')
 def pdmp_med_requests():
     # PDMP refers to r4 MedicationRequest as MedicationOrder
     pdmp_url = '{base_url}/v/r4/fhir/MedicationOrder'.format(
@@ -36,13 +38,13 @@ def pdmp_med_requests():
     return response.json()
 
 
-@blueprint.route('/MedicationRequest')
+@blueprint.route(f'{r4prefix}/MedicationRequest')
 def medication_requests():
     """Return compiled list of MedicationRequests from available endpoints"""
     return collate_results((pdmp_med_requests(), emr_med_requests()))
 
 
-@blueprint.route('/MedicationOrder')
+@blueprint.route(f'{r2prefix}/MedicationOrder')
 def medication_order():
     pdmp_url = '{base_url}/v/r2/fhir/MedicationOrder'.format(
         base_url=current_app.config['PDMP_URL'],
@@ -52,7 +54,7 @@ def medication_order():
     return response.json()
 
 
-@blueprint.route('/Observation')
+@blueprint.route(f'{r2prefix}/Observation')
 def observations():
     phr_url = '{base_url}/Observation'.format(
         base_url=current_app.config['PHR_URL'],
