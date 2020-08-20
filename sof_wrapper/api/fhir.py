@@ -1,4 +1,4 @@
-from flask import Blueprint, current_app, session
+from flask import Blueprint, current_app, request, session
 import requests
 
 
@@ -19,21 +19,32 @@ def collate_results(*result_sets):
 
 
 @blueprint.route(f'{r4prefix}/emr/MedicationRequest')
-def emr_med_requests():
+@blueprint.route(f'{r4prefix}/emr/MedicationRequest/<string:patient_id>')
+def emr_med_requests(patient_id=None):
     base_url = session['iss']
     emr_url = f'{base_url}/MedicationRequest'
-    response = requests.get(emr_url)
+    params = {"subject": f"Patient/{patient_id}"} if patient_id else {}
+    response = requests.get(emr_url, params)
     response.raise_for_status()
     return response.json()
 
 
 @blueprint.route(f'{r4prefix}/pdmp/MedicationRequest')
-def pdmp_med_requests():
-    # PDMP refers to r4 MedicationRequest as MedicationOrder
+def pdmp_med_requests(**kwargs):
+    """return results from PDMP request for MedicationRequest
+
+    Include as kwargs or request parameters for remote query.
+    - 'subject:Patient.name.given': given name
+    - 'subject:Patient.name.family': family name
+    - 'subject:Patient.birthdate': DOB in `eqYYYY-MM-DD` format
+
+    """
+    # script-fhir-facade refers to r4 MedicationRequest as MedicationOrder
     pdmp_url = '{base_url}/v/r4/fhir/MedicationOrder'.format(
         base_url=current_app.config['PDMP_URL'],
     )
-    response = requests.get(pdmp_url)
+    params = kwargs or request.args
+    response = requests.get(pdmp_url, params=params)
     response.raise_for_status()
     return response.json()
 
@@ -41,7 +52,22 @@ def pdmp_med_requests():
 @blueprint.route(f'{r4prefix}/MedicationRequest')
 def medication_requests():
     """Return compiled list of MedicationRequests from available endpoints"""
-    return collate_results((pdmp_med_requests(), emr_med_requests()))
+
+    # TODO: should patient_id be a request parameter?
+    # TODO: determine most reliable source of patient_id.
+    patient_id = session.get('launch_token_patient', None)
+    pdmp_args = {}
+    if patient_id:
+        patient_fhir = patient_by_id(patient_id)
+        pdmp_args['subject:Patient.name.family'] = patient_fhir[
+            'name'][0]['family']
+        pdmp_args['subject:Patient.name.given'] = patient_fhir[
+            'name'][0]['given'][0]
+        pdmp_args['subject:Patient.birthdate'] = (
+            f"eq{patient_fhir['birthDate']}")
+
+    return collate_results(
+        (pdmp_med_requests(**pdmp_args), emr_med_requests(patient_id)))
 
 
 @blueprint.route(f'{r2prefix}/MedicationOrder')
