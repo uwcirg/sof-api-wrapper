@@ -1,4 +1,3 @@
-from flask import session
 import json
 import os
 from pytest import fixture
