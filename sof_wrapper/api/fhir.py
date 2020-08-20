@@ -74,6 +74,22 @@ def observations():
     return phr_observations.json()
 
 
+@blueprint.route(f'{r4prefix}/Patient/<string:id>')
+def patient_by_id(id):
+    base_url = session['iss']
+    key = f'patient_{id}'
+    if key in session:
+        return session[key]
+
+    patient_url = f'{base_url}/Patient/{id}'
+    response = requests.get(patient_url)
+    response.raise_for_status()
+    patient_fhir = response.json()
+    session[key] = patient_fhir
+
+    return patient_fhir
+
+
 @blueprint.after_request
 def add_header(response):
     response.headers['Access-Control-Allow-Origin'] = '*'
