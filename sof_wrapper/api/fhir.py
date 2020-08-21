@@ -145,6 +145,8 @@ def route_fhir(relative_path):
     resource_name = paths.pop()
 
     route_map = {
+        #'MedicationOrder': medication_order,
+        #'MedicationRequest': medication_requests
     }
 
 
