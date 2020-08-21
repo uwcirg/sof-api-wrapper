@@ -168,6 +168,7 @@ def auth_info():
     token_response = session['token_response']
     iss = session['iss']
     launch_token_patient = session['launch_token_patient']
+    session_id = request.cookies.get(current_app.session_cookie_name)
     return {
         # debugging
         'token_data': token_response,
@@ -177,7 +178,12 @@ def auth_info():
             "token_type": "Bearer",
         },
         "realFhirServiceUrl": iss,
-        "fhirServiceUrl": url_for('fhir.route_fhir', _external=True),
+        "fhirServiceUrl": url_for(
+            'fhir.route_fhir',
+            session_id=session_id,
+            relative_path='',
+            _external=True
+        ),
         # fallback to patient obtained from non-opaque (non-standard) launch token
         "patientId":token_response.get('patient', launch_token_patient),
     }

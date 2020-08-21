@@ -1,5 +1,6 @@
 from flask import Blueprint, current_app, request, session
 import requests
+import pickle
 
 
 blueprint = Blueprint('fhir', __name__)
@@ -138,9 +139,22 @@ def patient_by_id(id):
     return patient_fhir
 
 
-@blueprint.route('/fhir-router/', defaults={'relative_path': ''})
-@blueprint.route('/fhir-router/<path:relative_path>')
-def route_fhir(relative_path):
+def get_redis_session_data(session_id):
+    """Load session data associated with given session_id"""
+    # TODO: further investigate using SessionHandler
+    redis_handle = current_app.config['SESSION_REDIS']
+    session_prefix = current_app.config.get('SESSION_KEY_PREFIX', 'session:')
+
+    encoded_session_data = redis_handle.get(f'{session_prefix}{session_id}')
+
+    # why doesn't this use the flask default JSON serializer?
+    session_data = pickle.loads(encoded_session_data)
+    return session_data
+
+
+@blueprint.route('/fhir-router/', defaults={'relative_path': '', 'session_id': None})
+@blueprint.route('/fhir-router/<string:session_id>/<path:relative_path>')
+def route_fhir(relative_path, session_id):
     paths = relative_path.split('/')
     resource_name = paths.pop()
 
@@ -153,8 +167,10 @@ def route_fhir(relative_path):
     if resource_name in route_map:
         return route_map[resource_name]()
 
-    # TODO: associate session vars correctly
-    upstream_fhir_base_url = session.get('iss', 'https://launch.smarthealthit.org/v/r4/fhir')
+
+    # use EHR FHIR server from launch
+    # use session lookup across sessions if necessary
+    upstream_fhir_base_url = session.get('iss') or get_redis_session_data(session_id).get('iss')
     upstream_fhir_url = '/'.join((upstream_fhir_base_url, relative_path))
     upstream_headers = {}
     if 'Authorization' in request.headers:
