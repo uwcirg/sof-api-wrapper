@@ -153,7 +153,8 @@ def route_fhir(relative_path):
     if resource_name in route_map:
         return route_map[resource_name]()
 
-    upstream_fhir_base_url = session['iss']
+    # TODO: associate session vars correctly
+    upstream_fhir_base_url = session.get('iss', 'https://launch.smarthealthit.org/v/r4/fhir')
     upstream_fhir_url = '/'.join((upstream_fhir_base_url, relative_path))
     upstream_headers = {}
     if 'Authorization' in request.headers:
