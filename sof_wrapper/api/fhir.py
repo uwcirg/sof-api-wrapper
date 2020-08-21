@@ -24,8 +24,13 @@ def emr_med_requests(patient_id=None):
     base_url = session['iss']
     emr_url = f'{base_url}/MedicationRequest'
     params = {"subject": f"Patient/{patient_id}"} if patient_id else {}
+    # TODO: enhance for audit or remove PHI?
+    current_app.logger.debug(
+        f"fire request for emr meds on {emr_url}/?{params}")
     response = requests.get(emr_url, params)
     response.raise_for_status()
+    current_app.logger.debug("emr returned {} MedicationRequests".format(
+        len(response.json().get("entry", []))))
     return response.json()
 
 
@@ -44,8 +49,13 @@ def pdmp_med_requests(**kwargs):
         base_url=current_app.config['PDMP_URL'],
     )
     params = kwargs or request.args
+    # TODO: enhance for audit or remove PHI?
+    current_app.logger.debug(
+        f"fire request for PDMP meds on {pdmp_url}/?{params}")
     response = requests.get(pdmp_url, params=params)
     response.raise_for_status()
+    current_app.logger.debug("PDMP returned {} MedicationRequests".format(
+        len(response.json().get("entry", []))))
     return response.json()
 
 
@@ -67,7 +77,7 @@ def medication_requests():
             f"eq{patient_fhir['birthDate']}")
 
     return collate_results(
-        (pdmp_med_requests(**pdmp_args), emr_med_requests(patient_id)))
+        pdmp_med_requests(**pdmp_args), emr_med_requests(patient_id))
 
 
 @blueprint.route(f'{r2prefix}/MedicationOrder')
