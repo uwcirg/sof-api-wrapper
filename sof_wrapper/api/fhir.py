@@ -49,6 +49,18 @@ def pdmp_med_requests(**kwargs):
         base_url=current_app.config['PDMP_URL'],
     )
     params = kwargs or request.args
+    # TODO: remove hack to generate fake records for Brenda from Darth
+    if (
+            params.get('subject:Patient.name.family') == 'Jackson' and
+            params.get('subject:Patient.name.given') == 'Brenda' and
+            params.get('subject:Patient.birthdate') == 'eq1956-10-14'):
+        # avoid type errors on request.args by replacing
+        params = {
+            'subject:Patient.name.family': 'Vader',
+            'subject:Patient.name.given': 'Darth',
+            'subject:Patient.birthdate': 'eq1945-01-15'
+        }
+
     # TODO: enhance for audit or remove PHI?
     current_app.logger.debug(
         f"fire request for PDMP meds on {pdmp_url}/?{params}")
