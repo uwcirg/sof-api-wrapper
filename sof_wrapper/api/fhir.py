@@ -72,15 +72,10 @@ def pdmp_med_requests(**kwargs):
     return response.json()
 
 
+@blueprint.route(f'{r4prefix}/MedicationRequest/<string:patient_id>')
 @blueprint.route(f'{r4prefix}/MedicationRequest')
-def medication_requests():
+def medication_requests(patient_id=None):
     """Return compiled list of MedicationRequests from available endpoints"""
-
-    # TODO: should patient_id be a request parameter?
-    # TODO: determine most reliable source of patient_id.
-    session_data = session if 'launch_token_patient' in session else get_redis_session_data(g.session_id)
-
-    patient_id = session_data.get('launch_token_patient')
     pdmp_args = {}
     if patient_id:
         patient_fhir = patient_by_id(patient_id)
@@ -161,6 +156,11 @@ def get_redis_session_data(session_id):
 def route_fhir(relative_path, session_id):
     g.session_id = session_id
     current_app.logger.debug('received session_id as path parameter: %s', session_id)
+
+    session_data = get_redis_session_data(session_id)
+    patient_id = session_data['token_response']['patient']
+    iss = session_data['iss']
+
     paths = relative_path.split('/')
     resource_name = paths.pop()
 
@@ -172,12 +172,12 @@ def route_fhir(relative_path, session_id):
 
 
     if resource_name in route_map:
-        return route_map[resource_name]()
+        return route_map[resource_name](patient_id=patient_id)
 
 
     # use EHR FHIR server from launch
     # use session lookup across sessions if necessary
-    upstream_fhir_base_url = session.get('iss') or get_redis_session_data(session_id).get('iss')
+    upstream_fhir_base_url = iss
     upstream_fhir_url = '/'.join((upstream_fhir_base_url, relative_path))
     upstream_headers = {}
     if 'Authorization' in request.headers:
