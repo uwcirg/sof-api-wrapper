@@ -188,5 +188,6 @@ def route_fhir(relative_path, session_id):
 @blueprint.after_request
 def add_header(response):
     response.headers['Access-Control-Allow-Origin'] = '*'
+    response.headers['Access-Control-Allow-Headers'] = 'Authorization'
 
     return response
