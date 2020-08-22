@@ -160,6 +160,7 @@ def get_redis_session_data(session_id):
 @blueprint.route('/fhir-router/<string:session_id>/<path:relative_path>')
 def route_fhir(relative_path, session_id):
     g.session_id = session_id
+    current_app.logger.debug('received session_id as path parameter: %s', session_id)
     paths = relative_path.split('/')
     resource_name = paths.pop()
 
