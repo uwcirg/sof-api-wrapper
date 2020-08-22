@@ -1,4 +1,4 @@
-from flask import Blueprint, current_app, request, session
+from flask import Blueprint, current_app, request, session, g
 import requests
 import pickle
 
@@ -155,6 +155,7 @@ def get_redis_session_data(session_id):
 @blueprint.route('/fhir-router/', defaults={'relative_path': '', 'session_id': None})
 @blueprint.route('/fhir-router/<string:session_id>/<path:relative_path>')
 def route_fhir(relative_path, session_id):
+    g.session_id = session_id
     paths = relative_path.split('/')
     resource_name = paths.pop()
 
