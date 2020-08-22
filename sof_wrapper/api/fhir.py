@@ -92,7 +92,9 @@ def medication_requests():
             f"eq{patient_fhir['birthDate']}")
 
     return collate_results(
-        pdmp_med_requests(**pdmp_args), emr_med_requests(patient_id))
+        pdmp_med_requests(**pdmp_args),
+        emr_med_requests(patient_id),
+    )
 
 
 @blueprint.route(f'{r2prefix}/MedicationOrder')
