@@ -96,7 +96,7 @@ def medication_requests():
         emr_med_requests(patient_id),
     )
 
-
+# TODO: refactor to "collate" API, like medication_requests()
 @blueprint.route(f'{r2prefix}/MedicationOrder')
 def medication_order():
     pdmp_url = '{base_url}/v/r2/fhir/MedicationOrder'.format(
@@ -164,6 +164,7 @@ def route_fhir(relative_path, session_id):
     resource_name = paths.pop()
 
     route_map = {
+        # TODO: refactor to "collate" API, like medication_requests()
         #'MedicationOrder': medication_order,
         'MedicationRequest': medication_requests
     }
