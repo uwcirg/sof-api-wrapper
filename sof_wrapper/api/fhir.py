@@ -22,7 +22,7 @@ def collate_results(*result_sets):
 @blueprint.route(f'{r4prefix}/emr/MedicationRequest')
 @blueprint.route(f'{r4prefix}/emr/MedicationRequest/<string:patient_id>')
 def emr_med_requests(patient_id=None):
-    base_url = session['iss']
+    base_url = session.get('iss') or get_redis_session_data(g.session_id).get('iss')
     emr_url = f'{base_url}/MedicationRequest'
     params = {"subject": f"Patient/{patient_id}"} if patient_id else {}
     # TODO: enhance for audit or remove PHI?
@@ -78,7 +78,9 @@ def medication_requests():
 
     # TODO: should patient_id be a request parameter?
     # TODO: determine most reliable source of patient_id.
-    patient_id = session.get('launch_token_patient', None)
+    session_data = session if 'launch_token_patient' in session else get_redis_session_data(g.session_id)
+
+    patient_id = session_data.get('launch_token_patient')
     pdmp_args = {}
     if patient_id:
         patient_fhir = patient_by_id(patient_id)
@@ -125,7 +127,7 @@ def observations():
 
 @blueprint.route(f'{r4prefix}/Patient/<string:id>')
 def patient_by_id(id):
-    base_url = session['iss']
+    base_url = session.get('iss') or get_redis_session_data(g.session_id).get('iss')
     key = f'patient_{id}'
     if key in session:
         return session[key]
