@@ -165,7 +165,7 @@ def route_fhir(relative_path, session_id):
 
     route_map = {
         #'MedicationOrder': medication_order,
-        #'MedicationRequest': medication_requests
+        'MedicationRequest': medication_requests
     }
 
 
