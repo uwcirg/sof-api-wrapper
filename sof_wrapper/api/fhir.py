@@ -1,5 +1,6 @@
-from flask import Blueprint, current_app, request, session
+from flask import Blueprint, current_app, request, session, g
 import requests
+import pickle
 
 
 blueprint = Blueprint('fhir', __name__)
@@ -21,7 +22,7 @@ def collate_results(*result_sets):
 @blueprint.route(f'{r4prefix}/emr/MedicationRequest', defaults={'patient_id': None})
 @blueprint.route(f'{r4prefix}/emr/MedicationRequest/<string:patient_id>')
 def emr_med_requests(patient_id):
-    base_url = session['iss']
+    base_url = session.get('iss') or get_redis_session_data(g.session_id).get('iss')
     emr_url = f'{base_url}/MedicationRequest'
     params = {"subject": f"Patient/{patient_id}"} if patient_id else {}
 
@@ -31,7 +32,7 @@ def emr_med_requests(patient_id):
 @blueprint.route(f'{r2prefix}/emr/MedicationOrder', defaults={'patient_id': None})
 @blueprint.route(f'{r2prefix}/emr/MedicationOrder/<string:patient_id>')
 def emr_med_orders(patient_id):
-    base_url = session['iss']
+    base_url = session.get('iss') or get_redis_session_data(g.session_id).get('iss')
     emr_url = f'{base_url}/MedicationOrder'
     params = {"patient": f"Patient/{patient_id}"} if patient_id else {}
 
@@ -108,13 +109,10 @@ def pdmp_meds(pdmp_url, params):
     return response.json()
 
 
+@blueprint.route(f'{r4prefix}/MedicationRequest/<string:patient_id>')
 @blueprint.route(f'{r4prefix}/MedicationRequest')
-def medication_requests():
+def medication_requests(patient_id=None):
     """Return compiled list of MedicationRequests from available endpoints"""
-
-    # TODO: should patient_id be a request parameter?
-    # TODO: determine most reliable source of patient_id.
-    patient_id = session.get('launch_token_patient', None)
     pdmp_args = {}
     if patient_id:
         patient_fhir = patient_by_id(patient_id)
@@ -126,9 +124,11 @@ def medication_requests():
             f"eq{patient_fhir['birthDate']}")
 
     return collate_results(
-        pdmp_med_requests(**pdmp_args), emr_med_requests(patient_id))
+        pdmp_med_requests(**pdmp_args),
+        emr_med_requests(patient_id),
+    )
 
-
+# TODO: refactor to "collate" API, like medication_requests()
 @blueprint.route(f'{r2prefix}/MedicationOrder')
 def medication_order():
     pdmp_url = '{base_url}/v/r2/fhir/MedicationOrder'.format(
@@ -161,7 +161,7 @@ def observations():
 
 @blueprint.route(f'{r4prefix}/Patient/<string:id>')
 def patient_by_id(id):
-    base_url = session['iss']
+    base_url = session.get('iss') or get_redis_session_data(g.session_id).get('iss')
     key = f'patient_{id}'
     if key in session:
         return session[key]
@@ -175,8 +175,63 @@ def patient_by_id(id):
     return patient_fhir
 
 
+def get_redis_session_data(session_id):
+    """Load session data associated with given session_id"""
+    # TODO: further investigate using SessionHandler
+    redis_handle = current_app.config['SESSION_REDIS']
+    session_prefix = current_app.config.get('SESSION_KEY_PREFIX', 'session:')
+
+    encoded_session_data = redis_handle.get(f'{session_prefix}{session_id}')
+
+    # why doesn't this use the flask default JSON serializer?
+    session_data = pickle.loads(encoded_session_data)
+    return session_data
+
+
+@blueprint.route('/fhir-router/', defaults={'relative_path': '', 'session_id': None})
+@blueprint.route('/fhir-router/<string:session_id>/<path:relative_path>')
+def route_fhir(relative_path, session_id):
+    g.session_id = session_id
+    current_app.logger.debug('received session_id as path parameter: %s', session_id)
+
+    session_data = get_redis_session_data(session_id)
+    patient_id = session_data['token_response']['patient']
+    iss = session_data['iss']
+
+    paths = relative_path.split('/')
+    resource_name = paths.pop()
+
+    route_map = {
+        # TODO: refactor to "collate" API, like medication_requests()
+        #'MedicationOrder': medication_order,
+        'MedicationRequest': medication_requests
+    }
+
+
+    if resource_name in route_map:
+        return route_map[resource_name](patient_id=patient_id)
+
+
+    # use EHR FHIR server from launch
+    # use session lookup across sessions if necessary
+    upstream_fhir_base_url = iss
+    upstream_fhir_url = '/'.join((upstream_fhir_base_url, relative_path))
+    upstream_headers = {}
+    if 'Authorization' in request.headers:
+        upstream_headers = {'Authorization': request.headers['Authorization']}
+
+    upstream_response = requests.get(
+        url=upstream_fhir_url,
+        headers=upstream_headers,
+        params=request.args,
+    )
+    upstream_response.raise_for_status()
+    return upstream_response.json()
+
+
 @blueprint.after_request
 def add_header(response):
     response.headers['Access-Control-Allow-Origin'] = '*'
+    response.headers['Access-Control-Allow-Headers'] = 'Authorization'
 
     return response
