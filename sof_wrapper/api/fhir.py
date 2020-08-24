@@ -128,15 +128,24 @@ def medication_requests(patient_id=None):
         emr_med_requests(patient_id),
     )
 
-# TODO: refactor to "collate" API, like medication_requests()
+@blueprint.route(f'{r2prefix}/MedicationOrder/<string:patient_id>')
 @blueprint.route(f'{r2prefix}/MedicationOrder')
-def medication_order():
-    pdmp_url = '{base_url}/v/r2/fhir/MedicationOrder'.format(
-        base_url=current_app.config['PDMP_URL'],
+def medication_order(patient_id):
+    """Return compiled list of MedicationOrders from available endpoints"""
+    pdmp_args = {}
+    if patient_id:
+        patient_fhir = patient_by_id(patient_id)
+        pdmp_args['subject:Patient.name.family'] = patient_fhir[
+            'name'][0]['family']
+        pdmp_args['subject:Patient.name.given'] = patient_fhir[
+            'name'][0]['given'][0]
+        pdmp_args['subject:Patient.birthdate'] = (
+            f"eq{patient_fhir['birthDate']}")
+
+    return collate_results(
+        pdmp_med_orders(**pdmp_args),
+        emr_med_orders(patient_id),
     )
-    response = requests.get(pdmp_url)
-    response.raise_for_status()
-    return response.json()
 
 
 @blueprint.route(f'{r2prefix}/Observation')
