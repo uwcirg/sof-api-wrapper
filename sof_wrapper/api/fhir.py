@@ -1,4 +1,4 @@
-from flask import Blueprint, current_app, request, session, g
+from flask import Blueprint, abort, current_app, request, session, g
 import requests
 import pickle
 
@@ -111,7 +111,7 @@ def pdmp_meds(pdmp_url, params):
 
 @blueprint.route(f'{r4prefix}/MedicationRequest/<string:patient_id>')
 @blueprint.route(f'{r4prefix}/MedicationRequest')
-def medication_requests(patient_id=None):
+def medication_request(patient_id=None):
     """Return compiled list of MedicationRequests from available endpoints"""
     pdmp_args = {}
     if patient_id:
@@ -186,6 +186,9 @@ def patient_by_id(id):
 
 def get_redis_session_data(session_id):
     """Load session data associated with given session_id"""
+    if session_id is None:
+        return {}
+
     # TODO: further investigate using SessionHandler
     redis_handle = current_app.config['SESSION_REDIS']
     session_prefix = current_app.config.get('SESSION_KEY_PREFIX', 'session:')
@@ -204,22 +207,24 @@ def route_fhir(relative_path, session_id):
     current_app.logger.debug('received session_id as path parameter: %s', session_id)
 
     session_data = get_redis_session_data(session_id)
-    patient_id = session_data['token_response']['patient']
-    iss = session_data['iss']
+    patient_id = session_data.get('token_response', {}).get('patient')
+    if not patient_id:
+        abort(400, "no patient ID found in session; can't continue")
+
+    iss = session_data.get('iss')
+    if not iss:
+        abort(400, "no iss found in session; can't continue")
 
     paths = relative_path.split('/')
     resource_name = paths.pop()
 
     route_map = {
-        # TODO: refactor to "collate" API, like medication_requests()
-        #'MedicationOrder': medication_order,
-        'MedicationRequest': medication_requests
+        'MedicationOrder': medication_order,
+        'MedicationRequest': medication_request
     }
-
 
     if resource_name in route_map:
         return route_map[resource_name](patient_id=patient_id)
-
 
     # use EHR FHIR server from launch
     # use session lookup across sessions if necessary
