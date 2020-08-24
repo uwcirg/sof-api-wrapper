@@ -19,12 +19,27 @@ def collate_results(*result_sets):
     return results
 
 
-@blueprint.route(f'{r4prefix}/emr/MedicationRequest')
+@blueprint.route(f'{r4prefix}/emr/MedicationRequest', defaults={'patient_id': None})
 @blueprint.route(f'{r4prefix}/emr/MedicationRequest/<string:patient_id>')
-def emr_med_requests(patient_id=None):
+def emr_med_requests(patient_id):
     base_url = session.get('iss') or get_redis_session_data(g.session_id).get('iss')
     emr_url = f'{base_url}/MedicationRequest'
     params = {"subject": f"Patient/{patient_id}"} if patient_id else {}
+
+    return emr_meds(emr_url, params)
+
+
+@blueprint.route(f'{r2prefix}/emr/MedicationOrder', defaults={'patient_id': None})
+@blueprint.route(f'{r2prefix}/emr/MedicationOrder/<string:patient_id>')
+def emr_med_orders(patient_id):
+    base_url = session.get('iss') or get_redis_session_data(g.session_id).get('iss')
+    emr_url = f'{base_url}/MedicationOrder'
+    params = {"patient": f"Patient/{patient_id}"} if patient_id else {}
+
+    return emr_meds(emr_url, params)
+
+
+def emr_meds(emr_url, params):
     # TODO: enhance for audit or remove PHI?
     current_app.logger.debug(
         f"fire request for emr meds on {emr_url}/?{params}")
@@ -50,6 +65,28 @@ def pdmp_med_requests(**kwargs):
         base_url=current_app.config['PDMP_URL'],
     )
     params = kwargs or request.args
+    return pdmp_meds(pdmp_url, params)
+
+
+@blueprint.route(f'{r2prefix}/pdmp/MedicationOrder')
+def pdmp_med_orders(**kwargs):
+    """return results from PDMP request for MedicationOrder
+
+    Include as kwargs or request parameters for remote query.
+    - 'subject:Patient.name.given': given name
+    - 'subject:Patient.name.family': family name
+    - 'subject:Patient.birthdate': DOB in `eqYYYY-MM-DD` format
+
+    """
+    # script-fhir-facade refers to r4 MedicationRequest as MedicationOrder
+    pdmp_url = '{base_url}/v/r4/fhir/MedicationOrder'.format(
+        base_url=current_app.config['PDMP_URL'],
+        )
+    params = kwargs or request.args
+    return pdmp_meds(pdmp_url, params)
+
+
+def pdmp_meds(pdmp_url, params):
     # TODO: remove hack to generate fake records for Brenda from Darth
     if (
             params.get('subject:Patient.name.family') == 'Jackson' and
@@ -67,7 +104,7 @@ def pdmp_med_requests(**kwargs):
         f"fire request for PDMP meds on {pdmp_url}/?{params}")
     response = requests.get(pdmp_url, params=params)
     response.raise_for_status()
-    current_app.logger.debug("PDMP returned {} MedicationRequests".format(
+    current_app.logger.debug("PDMP returned {} MedicationRequest/Orders".format(
         len(response.json().get("entry", []))))
     return response.json()
 
