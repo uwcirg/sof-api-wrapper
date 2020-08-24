@@ -1,8 +1,12 @@
 import json
 import os
+import pickle
 from pytest import fixture
+from pytest_redis import factories
 
 emr_endpoint = "https://launch.smarthealthit.org/v/r4/fhir"
+patient_id = '5c41cecf-cf81-434f-9da7-e24e5a99dbc2'
+session_id = 'mock-session'
 
 
 @fixture
@@ -34,6 +38,23 @@ def patient_b_jackson(request):
 @fixture
 def pdmp_med_request_bundle(request):
     return json_from_file(request, "PDMP-MedicationRequestBundleR4.json")
+
+
+redis_handle = factories.redisdb('redis_nooproc')
+
+
+@fixture
+def redis_session(client, redis_handle):
+    """Loads a redis-session with a mock patient id and iss"""
+    session_prefix = client.application.config.get(
+        'SESSION_KEY_PREFIX', 'session:')
+    session_key = f'{session_prefix}{session_id}'
+    session_data = {
+        'iss': emr_endpoint,
+        'token_response': {'patient': patient_id}
+    }
+
+    redis_handle.set(session_key, pickle.dumps(session_data))
 
 
 def test_emr_med_request(app_w_iss, requests_mock, emr_med_request_bundle):
@@ -68,7 +89,6 @@ def test_combine_bundles(emr_med_request_bundle, pdmp_med_request_bundle):
 
 
 def test_patient_by_id(app_w_iss, requests_mock, patient_b_jackson):
-    patient_id = '5c41cecf-cf81-434f-9da7-e24e5a99dbc2'
     path = f'/v/r4/fhir/Patient/{patient_id}'
 
     # Mock EHR Patient request
@@ -76,3 +96,19 @@ def test_patient_by_id(app_w_iss, requests_mock, patient_b_jackson):
 
     result = app_w_iss.get(path)
     assert result.json == patient_b_jackson
+
+
+def test_fhir_router_requires_patient(client):
+    """Without a patient, expect 400"""
+    result = client.get('/fhir-router/')
+    assert result.status_code == 400
+
+
+def test_fhir_router_with_patient_param(client, mocker, redis_session):
+    """Mock function routed to - confirm correct calling parameters"""
+    from sof_wrapper.api import fhir
+    mocker.patch.object(fhir, 'medication_request')
+    fhir.medication_request.return_value = {'mock': 'results'}
+
+    result = client.get(f'/fhir-router/{session_id}/MedicationRequest')
+    fhir.medication_request.assert_called_once_with(patient_id=patient_id)
