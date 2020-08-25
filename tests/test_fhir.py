@@ -43,11 +43,11 @@ def pdmp_med_request_bundle(request):
 
 real_redis_connection = SESSION_REDIS.connection_pool.get_connection('testing-connection')
 redis_factory = factories.redis_noproc(host=real_redis_connection.host)
-redis_db = factories.redisdb('redis_factory')
+redis_handle = factories.redisdb('redis_factory')
 
 
 @fixture
-def redis_session(client, redis_db):
+def redis_session(client, redis_handle):
     """Loads a redis-session with a mock patient id and iss"""
     session_prefix = client.application.config.get(
         'SESSION_KEY_PREFIX', 'session:')
@@ -57,7 +57,7 @@ def redis_session(client, redis_db):
         'token_response': {'patient': patient_id}
     }
 
-    redis_db.set(session_key, pickle.dumps(session_data))
+    redis_handle.set(session_key, pickle.dumps(session_data))
 
 
 def test_emr_med_request(app_w_iss, requests_mock, emr_med_request_bundle):
