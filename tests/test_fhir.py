@@ -3,6 +3,7 @@ import os
 import pickle
 from pytest import fixture
 from pytest_redis import factories
+from sof_wrapper.config import SESSION_REDIS
 
 emr_endpoint = "https://launch.smarthealthit.org/v/r4/fhir"
 patient_id = '5c41cecf-cf81-434f-9da7-e24e5a99dbc2'
@@ -40,22 +41,13 @@ def pdmp_med_request_bundle(request):
     return json_from_file(request, "PDMP-MedicationRequestBundleR4.json")
 
 
-@fixture
-def redis_handle(client):
-    """Returns a redis fixture configured with the current app config"""
-    real_redis = client.application.config.get('SESSION_REDIS')
-    real_redis_connection = real_redis.connection_pool.get_connection('testing-connection')
-
-
-    testing_redis_handle = factories.redis_noproc(
-        host=real_redis_connection.host,
-        port=real_redis_connection.port
-    )
-    return testing_redis_handle
+real_redis_connection = SESSION_REDIS.connection_pool.get_connection('testing-connection')
+redis_factory = factories.redis_noproc(host=real_redis_connection.host)
+redis_db = factories.redisdb('redis_factory')
 
 
 @fixture
-def redis_session(client, redis_handle):
+def redis_session(client, redis_db):
     """Loads a redis-session with a mock patient id and iss"""
     session_prefix = client.application.config.get(
         'SESSION_KEY_PREFIX', 'session:')
@@ -65,7 +57,7 @@ def redis_session(client, redis_handle):
         'token_response': {'patient': patient_id}
     }
 
-    redis_handle.set(session_key, pickle.dumps(session_data))
+    redis_db.set(session_key, pickle.dumps(session_data))
 
 
 def test_emr_med_request(app_w_iss, requests_mock, emr_med_request_bundle):
