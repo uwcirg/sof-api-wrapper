@@ -15,6 +15,9 @@ pluggy==0.13.1            # via pytest, tox
 py==1.9.0                 # via pytest, tox
 pyparsing==2.4.7          # via packaging
 pytest==6.0.1             # via sof_wrapper (setup.py)
+pytest-mock==3.3.0        # via pytest-mock (setup.py)
+pytest-redis==2.0.0       # via pytest-redis (setup.py)
+requests-mock==1.8.0      # via requests-mock
 six==1.15.0               # via cryptography, ecdsa, packaging, python-jose, tox, virtualenv
 toml==0.10.1              # via pytest, tox
 tox==3.19.0               # via sof_wrapper (setup.py)

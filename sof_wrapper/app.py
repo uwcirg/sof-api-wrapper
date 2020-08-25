@@ -1,5 +1,6 @@
-from logging import config as logging_config
 from flask import Flask
+from logging import config as logging_config
+import os
 from werkzeug.middleware.proxy_fix import ProxyFix
 
 from sof_wrapper import auth, api
@@ -11,6 +12,7 @@ def create_app(testing=False, cli=False):
     """
     app = Flask('sof_wrapper')
     app.config.from_object('sof_wrapper.config')
+    app.config['TESTING'] = testing
 
     configure_logging(app)
     configure_extensions(app, cli)
@@ -22,7 +24,13 @@ def create_app(testing=False, cli=False):
 
 def configure_logging(app):
     app.logger  # must call to initialize prior to config or it'll replace
-    logging_config.fileConfig('logging.ini', disable_existing_loggers=False)
+
+    config = 'logging.ini'
+    if app.config.get('TESTING'):
+        # look above the testing dir when testing
+        config = os.path.join('..', config)
+
+    logging_config.fileConfig(config, disable_existing_loggers=False)
 
 
 def configure_extensions(app, cli):

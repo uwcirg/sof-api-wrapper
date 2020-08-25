@@ -1,0 +1,117 @@
+import json
+import os
+import pickle
+from pytest import fixture
+from pytest_redis import factories
+from sof_wrapper.config import SESSION_REDIS
+
+emr_endpoint = "https://launch.smarthealthit.org/v/r4/fhir"
+patient_id = '5c41cecf-cf81-434f-9da7-e24e5a99dbc2'
+session_id = 'mock-session'
+
+
+@fixture
+def app_w_iss(app):
+    # Fixture to push url for 'iss' into session
+    with app.test_client() as c:
+        with c.session_transaction() as sess:
+            sess['iss'] = emr_endpoint
+    yield c
+
+
+def json_from_file(request, filename):
+    data_dir, _ = os.path.splitext(request.module.__file__)
+    with open(os.path.join(data_dir, filename), 'r') as json_file:
+        data = json.load(json_file)
+    return data
+
+
+@fixture
+def emr_med_request_bundle(request):
+    return json_from_file(request, "MedicationRequestBundleR4.json")
+
+
+@fixture
+def patient_b_jackson(request):
+    return json_from_file(request, "PatientBJackson.json")
+
+
+@fixture
+def pdmp_med_request_bundle(request):
+    return json_from_file(request, "PDMP-MedicationRequestBundleR4.json")
+
+
+real_redis_connection = SESSION_REDIS.connection_pool.get_connection('testing-connection')
+redis_factory = factories.redis_noproc(host=real_redis_connection.host)
+redis_handle = factories.redisdb('redis_factory')
+
+
+@fixture
+def redis_session(client, redis_handle):
+    """Loads a redis-session with a mock patient id and iss"""
+    session_prefix = client.application.config.get(
+        'SESSION_KEY_PREFIX', 'session:')
+    session_key = f'{session_prefix}{session_id}'
+    session_data = {
+        'iss': emr_endpoint,
+        'token_response': {'patient': patient_id}
+    }
+
+    redis_handle.set(session_key, pickle.dumps(session_data))
+
+
+def test_emr_med_request(app_w_iss, requests_mock, emr_med_request_bundle):
+    """Test EMR MedicationRequest"""
+    # Mock EMR response for MedicationRequest
+    requests_mock.get(
+        '/'.join((emr_endpoint, 'MedicationRequest')),
+        json=emr_med_request_bundle)
+
+    result = app_w_iss.get('/v/r4/fhir/emr/MedicationRequest')
+    assert result.json == emr_med_request_bundle
+
+
+def test_pdmp_med_request(client, requests_mock, pdmp_med_request_bundle):
+    pdmp_url = "https://cosri-pdmp.cirg.washington.edu"
+    client.application.config['PDMP_URL'] = pdmp_url
+    pdmp_api = f"{pdmp_url}/v/r4/fhir/MedicationOrder"
+
+    # mock PDMP MedicationRequest
+    requests_mock.get(pdmp_api, json=pdmp_med_request_bundle)
+
+    result = client.get('/v/r4/fhir/pdmp/MedicationRequest')
+    assert result.json == pdmp_med_request_bundle
+
+
+def test_combine_bundles(emr_med_request_bundle, pdmp_med_request_bundle):
+    from sof_wrapper.api.fhir import collate_results
+    result = collate_results(emr_med_request_bundle, pdmp_med_request_bundle)
+    assert result['resourceType'] == 'Bundle'
+    assert len(result['entry']) == len(emr_med_request_bundle['entry']) + len(
+        pdmp_med_request_bundle['entry'])
+
+
+def test_patient_by_id(app_w_iss, requests_mock, patient_b_jackson):
+    path = f'/v/r4/fhir/Patient/{patient_id}'
+
+    # Mock EHR Patient request
+    requests_mock.get(path, json=patient_b_jackson)
+
+    result = app_w_iss.get(path)
+    assert result.json == patient_b_jackson
+
+
+def test_fhir_router_requires_patient(client):
+    """Without a patient, expect 400"""
+    result = client.get('/fhir-router/')
+    assert result.status_code == 400
+
+
+def test_fhir_router_with_patient_param(client, mocker, redis_session):
+    """Mock function routed to - confirm correct calling parameters"""
+    from sof_wrapper.api import fhir
+    mocker.patch.object(fhir, 'medication_request')
+    fhir.medication_request.return_value = {'mock': 'results'}
+
+    result = client.get(f'/fhir-router/{session_id}/MedicationRequest')
+    fhir.medication_request.assert_called_once_with(patient_id=patient_id)
