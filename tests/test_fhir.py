@@ -3,6 +3,7 @@ import os
 import pickle
 from pytest import fixture
 from pytest_redis import factories
+from sof_wrapper.config import SESSION_REDIS
 
 emr_endpoint = "https://launch.smarthealthit.org/v/r4/fhir"
 patient_id = '5c41cecf-cf81-434f-9da7-e24e5a99dbc2'
@@ -40,7 +41,9 @@ def pdmp_med_request_bundle(request):
     return json_from_file(request, "PDMP-MedicationRequestBundleR4.json")
 
 
-redis_handle = factories.redisdb('redis_nooproc')
+real_redis_connection = SESSION_REDIS.connection_pool.get_connection('testing-connection')
+redis_factory = factories.redis_noproc(host=real_redis_connection.host)
+redis_handle = factories.redisdb('redis_factory')
 
 
 @fixture
