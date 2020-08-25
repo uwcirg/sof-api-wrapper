@@ -40,7 +40,18 @@ def pdmp_med_request_bundle(request):
     return json_from_file(request, "PDMP-MedicationRequestBundleR4.json")
 
 
-redis_handle = factories.redisdb('redis_nooproc')
+@fixture
+def redis_handle(client):
+    """Returns a redis fixture configured with the current app config"""
+    real_redis = client.application.config.get('SESSION_REDIS')
+    real_redis_connection = real_redis.connection_pool.get_connection('testing-connection')
+
+
+    testing_redis_handle = factories.redis_noproc(
+        host=real_redis_connection.host,
+        port=real_redis_connection.port
+    )
+    return testing_redis_handle
 
 
 @fixture
