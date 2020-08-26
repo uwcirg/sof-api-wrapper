@@ -110,7 +110,7 @@ def pdmp_meds(pdmp_url, params):
 
 
 @blueprint.route(f'{r4prefix}/MedicationRequest/<string:patient_id>')
-@blueprint.route(f'{r4prefix}/MedicationRequest')
+@blueprint.route(f'{r4prefix}/MedicationRequest', defaults={'patient_id': None})
 def medication_request(patient_id=None):
     """Return compiled list of MedicationRequests from available endpoints"""
     pdmp_args = {}
@@ -128,8 +128,9 @@ def medication_request(patient_id=None):
         emr_med_requests(patient_id),
     )
 
+
 @blueprint.route(f'{r2prefix}/MedicationOrder/<string:patient_id>')
-@blueprint.route(f'{r2prefix}/MedicationOrder')
+@blueprint.route(f'{r2prefix}/MedicationOrder', defaults={'patient_id': None})
 def medication_order(patient_id):
     """Return compiled list of MedicationOrders from available endpoints"""
     pdmp_args = {}
