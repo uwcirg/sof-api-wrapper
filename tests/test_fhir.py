@@ -32,6 +32,11 @@ def emr_med_request_bundle(request):
 
 
 @fixture
+def med_request(request):
+    return json_from_file(request, "MedicationRequest.json")
+
+
+@fixture
 def patient_b_jackson(request):
     return json_from_file(request, "PatientBJackson.json")
 
@@ -58,6 +63,13 @@ def redis_session(client, redis_handle):
     }
 
     redis_handle.set(session_key, pickle.dumps(session_data))
+
+
+def test_add_cds_extensions(med_request):
+    from sof_wrapper.api.fhir import add_cds_extensions
+    result = add_cds_extensions(med_request)
+    # TODO: correct to check for expected, modified, details.
+    assert result != med_request
 
 
 def test_emr_med_request(app_w_iss, requests_mock, emr_med_request_bundle):
