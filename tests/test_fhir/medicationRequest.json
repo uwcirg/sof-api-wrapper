@@ -1,0 +1,55 @@
+{
+  "resource": {
+    "resourceType": "MedicationRequest",
+    "id": "47ad6f27-a5cf-4f82-8e9e-5c63b2b33325",
+    "subject": {
+      "reference": "Patient/5c41cecf-cf81-434f-9da7-e24e5a99dbc2"
+    },
+    "status": "active",
+    "intent": "order",
+    "doNotPerform": false,
+    "medicationCodeableConcept": {
+      "coding": [
+        {
+          "system": "http://www.nlm.nih.gov/research/umls/rxnorm",
+          "code": "197696",
+          "display": "72 HR Fentanyl 0.075 MG/HR Transdermal System"
+        }
+      ]
+    },
+    "authoredOn": "2020-06-26",
+    "dosageInstruction": [
+      {
+        "timing": {
+          "repeat": {
+            "frequency": 1,
+            "period": 3.0,
+            "periodUnit": "d"
+          }
+        },
+        "asNeededBoolean": false,
+        "doseAndRate": [
+          {
+            "doseQuantity": {
+              "value": 1.0,
+              "unit": "cL"
+            }
+          }
+        ]
+      }
+    ],
+    "dispenseRequest": {
+      "validityPeriod": {
+        "start": "2020-06-25",
+        "end": "2020-12-25"
+      },
+      "numberOfRepeatsAllowed": 3,
+      "expectedSupplyDuration": {
+        "value": 30,
+        "unit": "days",
+        "system": "http://unitsofmeasure.org",
+        "code": "d"
+      }
+    }
+  }
+}
