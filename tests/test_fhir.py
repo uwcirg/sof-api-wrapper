@@ -63,7 +63,7 @@ def redis_session(client, redis_handle):
 @fixture
 def auth_extensions(client, redis_handle):
     """Returns a set of extensions typically used for auth, a subset of a FHIR conformance statement"""
-    fhir_auth_extensions = [
+    return [
         {
             "url": "token",
             "valueUri": "https://cpsapisandbox.virenceaz.com:9443/demoAPIServer/oauth2/token"
@@ -77,8 +77,6 @@ def auth_extensions(client, redis_handle):
             "valueUri": "https://cpsapisandbox.virenceaz.com:9443/demoAPIServer/oauth2/registration"
         }
     ]
-
-    return fhir_auth_extensions
 
 
 def test_emr_med_request(app_w_iss, requests_mock, emr_med_request_bundle):
