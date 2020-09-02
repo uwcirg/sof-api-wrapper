@@ -60,6 +60,25 @@ def redis_session(client, redis_handle):
     redis_handle.set(session_key, pickle.dumps(session_data))
 
 
+@fixture
+def auth_extensions(client, redis_handle):
+    """Returns a set of extensions typically used for auth, a subset of a FHIR conformance statement"""
+    return [
+        {
+            "url": "token",
+            "valueUri": "https://cpsapisandbox.virenceaz.com:9443/demoAPIServer/oauth2/token"
+        },
+        {
+            "url": "authorize",
+            "valueUri": "https://cpsapisandbox.virenceaz.com:9443/demoAPIServer/oauth2/authorize"
+        },
+        {
+            "url": "register",
+            "valueUri": "https://cpsapisandbox.virenceaz.com:9443/demoAPIServer/oauth2/registration"
+        }
+    ]
+
+
 def test_emr_med_request(app_w_iss, requests_mock, emr_med_request_bundle):
     """Test EMR MedicationRequest"""
     # Mock EMR response for MedicationRequest
@@ -115,3 +134,13 @@ def test_fhir_router_with_patient_param(client, mocker, redis_session):
 
     result = client.get(f'/fhir-router/{session_id}/MedicationRequest')
     fhir.medication_request.assert_called_once_with(patient_id=patient_id)
+
+
+def test_extension_lookup(auth_extensions):
+    """Test extension lookup by extension URL"""
+    from sof_wrapper.auth.views import get_extension_value
+    authorize_url = get_extension_value(url='authorize', extensions=auth_extensions)
+    assert authorize_url == 'https://cpsapisandbox.virenceaz.com:9443/demoAPIServer/oauth2/authorize'
+
+    token_url = get_extension_value(url='token', extensions=auth_extensions)
+    assert token_url == 'https://cpsapisandbox.virenceaz.com:9443/demoAPIServer/oauth2/token'

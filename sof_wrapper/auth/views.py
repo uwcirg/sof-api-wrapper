@@ -27,6 +27,17 @@ LAUNCH_VALUE_TO_CODE = {
 blueprint = Blueprint('auth', __name__, url_prefix='/auth')
 
 
+def get_extension_value(url, extensions):
+    """Get the value of an extension, given the extension URL and list of extensions"""
+    for extension in extensions:
+        if extension.get('url') == url:
+            for key, value in extension.items():
+                if key.startswith('value'):
+                    return value
+            return extension[url]
+    raise ValueError('extension url not present in any extension', url)
+
+
 def debugging_compliance_fix(session):
     def _fix(response):
         current_app.logger.debug('access_token request url: %s', response.request.url)
@@ -90,9 +101,8 @@ def launch():
 
     # dynamic configuration
     if metadata_security:
-        # todo: use less fragile lookup logic (JSONPath?)
-        authorize_url = metadata_security['extension'][0]['extension'][0]['valueUri']
-        token_url = metadata_security['extension'][0]['extension'][1]['valueUri']
+        authorize_url = get_extension_value(url='authorize', extensions=metadata_security['extension'][0]['extension'])
+        token_url = get_extension_value(url='token', extensions=metadata_security['extension'][0]['extension'])
 
     # set client id and secret from flask config
     oauth.register(
