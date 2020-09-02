@@ -140,7 +140,7 @@ def test_fhir_router_with_patient_param(client, mocker, redis_session):
 
 def test_extension_lookup(auth_extensions):
     """Test extension lookup by extension URL"""
-    from sof_wrapper.auth import get_extension_value
+    from sof_wrapper.auth.views import get_extension_value
     authorize_url = get_extension_value(url='authorize', extensions=auth_extensions)
     assert authorize_url == 'https://cpsapisandbox.virenceaz.com:9443/demoAPIServer/oauth2/authorize'
 
