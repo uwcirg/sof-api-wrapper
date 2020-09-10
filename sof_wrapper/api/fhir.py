@@ -244,7 +244,7 @@ def route_fhir(relative_path, session_id):
         params=request.args,
     )
     upstream_response.raise_for_status()
-    return upstream_response.json()
+    return (upstream_response.text, upstream_response.status_code, upstream_response.headers.items())
 
 
 @blueprint.after_request
