@@ -69,7 +69,11 @@ def test_add_cds_extensions(med_request):
     from sof_wrapper.api.fhir import add_cds_extensions
     result = add_cds_extensions(med_request)
     # TODO: correct to check for expected, modified, details.
-    assert result != med_request
+    assert med_request['resource']['subject'] == result['resource']['subject']
+    assert 'extension' not in med_request['resource']['dispenseRequest']
+    assert (
+        result['resource']['dispenseRequest']['extension'][0] ==
+        {'url': 'http://cosri.org/fhir/date_ended', 'valueDate': '2020-07-26'})
 
 
 def test_emr_med_request(app_w_iss, requests_mock, emr_med_request_bundle):

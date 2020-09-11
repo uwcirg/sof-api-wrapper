@@ -1,3 +1,4 @@
+from copy import deepcopy
 import datetime
 import pickle
 import requests
@@ -22,7 +23,7 @@ def collate_results(*result_sets):
 
 def add_cds_extensions(med):
     """Add FHIR extensions as necessary to support frontend CDS"""
-
+    med = med.get('resource')
     expected_supply_duration = med.get('dispenseRequest', {}).get('expectedSupplyDuration', {}).get('value')
     if not expected_supply_duration:
         return med
@@ -35,14 +36,17 @@ def add_cds_extensions(med):
         'valueDate': date_ended.strftime('%Y-%m-%d'),
     }
 
-    annotated_med = med.copy()
-    annotated_med['dispenseRequest']['extension'].append(date_ended_extension)
+    annotated_med = deepcopy(med)
+    if 'extension' in annotated_med['dispenseRequest']:
+        annotated_med['dispenseRequest']['extension'].append(date_ended_extension)
+    else:
+        annotated_med['dispenseRequest']['extension'] = [date_ended_extension]
 
     # set as active if supply has not run out
     if date_ended >= datetime.datetime.today():
         annotated_med['status'] = 'active'
 
-    return annotated_med
+    return {'resource': annotated_med}
 
 
 def annotate_meds(med_bundle):
