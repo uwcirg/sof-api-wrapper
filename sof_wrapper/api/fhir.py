@@ -29,7 +29,7 @@ def add_cds_extensions(med):
         return med
 
     # TODO: reduce frequency to lowest terms (fractions.gcd), if necessary
-    dosage_instruction = ({
+    dosage_instruction = [{
         'timing': {
             "repeat": {
                 "frequency": quantity,
@@ -40,7 +40,7 @@ def add_cds_extensions(med):
         "doseAndRate": [
             {"doseQuantity": {"value": quantity/expected_supply_duration}}
         ]
-    })
+    }]
 
     annotated_med = med.copy()
     annotated_med['dispenseRequest'].setdefault('dosageInstruction', dosage_instruction)

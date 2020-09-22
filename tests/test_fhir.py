@@ -196,6 +196,4 @@ def test_dosage_instruction(pdmp_medication_request):
     assert annotated_pdmp_med['dispenseRequest']['dosageInstruction'][0]['timing']['repeat']['frequency'] == quantity
     assert annotated_pdmp_med['dispenseRequest']['dosageInstruction'][0]['timing']['repeat']['period'] == supply
 
-    assert annotated_pdmp_med['dispenseRequest']['dosageInstruction'][1]['doseAndRate']['doseQuantity']['value'] == supply/quantity
-
-    annotated_med['dispenseRequest'].setdefault('dosageInstruction', dosage_instruction)
+    assert annotated_pdmp_med['dispenseRequest']['dosageInstruction'][0]['doseAndRate'][0]['doseQuantity']['value'] == supply/quantity
