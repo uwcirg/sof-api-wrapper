@@ -61,7 +61,7 @@ def redis_session(client, redis_handle):
 
 
 @fixture
-def auth_extensions(client, redis_handle):
+def auth_extensions():
     """Returns a set of extensions typically used for auth, a subset of a FHIR conformance statement"""
     return [
         {
