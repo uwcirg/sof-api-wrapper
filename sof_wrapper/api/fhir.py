@@ -37,6 +37,7 @@ def add_cds_extensions(med):
             }
         },
         "doseAndRate": [
+            # dosage per day
             {"doseQuantity": {"value": quantity/expected_supply_duration}}
         ]
     }]
