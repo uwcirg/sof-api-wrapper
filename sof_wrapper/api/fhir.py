@@ -49,7 +49,10 @@ def add_cds_extensions(med):
 
 
 def annotate_meds(med_bundle):
-    annotated_bundle = {'resourceType': 'Bundle', 'entry': [], 'total': med_bundle['total']}
+    """Annotate bundled resources and return a copy"""
+    annotated_bundle = med_bundle.copy()
+    annotated_bundle['entry'] = []
+
     for med in med_bundle['entry']:
         annotated_bundle['entry'].append(add_cds_extensions(med))
     return annotated_bundle
