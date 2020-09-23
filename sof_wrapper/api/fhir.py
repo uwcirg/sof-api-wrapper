@@ -20,7 +20,7 @@ def collate_results(*result_sets):
 
 
 def add_cds_extensions(med):
-    """Add FHIR extensions as necessary to support frontend CDS"""
+    """Add FHIR attributes as necessary to support frontend CDS"""
 
     expected_supply_duration = med.get('dispenseRequest', {}).get('expectedSupplyDuration', {}).get('value')
     quantity = med.get('dispenseRequest', {}).get('quantity', {}).get('value')
