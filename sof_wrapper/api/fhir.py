@@ -1,7 +1,7 @@
-from flask import Blueprint, abort, current_app, request, session, g
-import requests
 import pickle
+import requests
 
+from flask import Blueprint, abort, current_app, request, session, g
 
 blueprint = Blueprint('fhir', __name__)
 r2prefix = '/v/r2/fhir'
@@ -17,6 +17,45 @@ def collate_results(*result_sets):
 
     results['total'] = len(results['entry'])
     return results
+
+
+def add_cds_extensions(med):
+    """Add FHIR attributes as necessary to support frontend CDS"""
+
+    expected_supply_duration = med.get('dispenseRequest', {}).get('expectedSupplyDuration', {}).get('value')
+    quantity = med.get('dispenseRequest', {}).get('quantity', {}).get('value')
+    if not expected_supply_duration or not quantity:
+        return med
+
+    # TODO: reduce frequency to lowest terms (fractions.gcd), if necessary
+    dosage_instruction = [{
+        'timing': {
+            "repeat": {
+                "frequency": quantity,
+                "period": expected_supply_duration,
+                "periodUnit": "d"
+            }
+        },
+        "doseAndRate": [
+            # dosage per day
+            {"doseQuantity": {"value": quantity/expected_supply_duration}}
+        ]
+    }]
+
+    annotated_med = med.copy()
+    annotated_med['dispenseRequest'].setdefault('dosageInstruction', dosage_instruction)
+
+    return annotated_med
+
+
+def annotate_meds(med_bundle):
+    """Annotate bundled resources and return a copy"""
+    annotated_bundle = med_bundle.copy()
+    annotated_bundle['entry'] = []
+
+    for med in med_bundle['entry']:
+        annotated_bundle['entry'].append(add_cds_extensions(med))
+    return annotated_bundle
 
 
 @blueprint.route(f'{r4prefix}/emr/MedicationRequest', defaults={'patient_id': None})
@@ -123,11 +162,10 @@ def medication_request(patient_id=None):
         pdmp_args['subject:Patient.birthdate'] = (
             f"eq{patient_fhir['birthDate']}")
 
-    return collate_results(
+    return annotate_meds(collate_results(
         pdmp_med_requests(**pdmp_args),
         emr_med_requests(patient_id),
-    )
-
+    ))
 
 @blueprint.route(f'{r2prefix}/MedicationOrder/<string:patient_id>')
 @blueprint.route(f'{r2prefix}/MedicationOrder', defaults={'patient_id': None})
@@ -143,10 +181,10 @@ def medication_order(patient_id):
         pdmp_args['subject:Patient.birthdate'] = (
             f"eq{patient_fhir['birthDate']}")
 
-    return collate_results(
+    return annotate_meds(collate_results(
         pdmp_med_orders(**pdmp_args),
         emr_med_orders(patient_id),
-    )
+    ))
 
 
 @blueprint.route(f'{r2prefix}/Observation')

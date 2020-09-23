@@ -61,7 +61,7 @@ def redis_session(client, redis_handle):
 
 
 @fixture
-def auth_extensions(client, redis_handle):
+def auth_extensions():
     """Returns a set of extensions typically used for auth, a subset of a FHIR conformance statement"""
     return [
         {
@@ -77,6 +77,45 @@ def auth_extensions(client, redis_handle):
             "valueUri": "https://cpsapisandbox.virenceaz.com:9443/demoAPIServer/oauth2/registration"
         }
     ]
+
+
+@fixture
+def pdmp_medication_request():
+    """Returns a sample FHIR R4 MedicationRequest from the PDMP SCRIPT facade"""
+
+    return {
+      "authoredOn": "2018-09-20",
+      "dispenseRequest": {
+        "expectedSupplyDuration": {
+          "code": "d",
+          "system": "http://unitsofmeasure.org",
+          "unit": "days",
+          "value": 10
+        },
+        "quantity": {
+          "value": 25
+        }
+      },
+      "medicationCodeableConcept": {
+        "coding": [
+          {
+            "code": "16714062201",
+            "display": "ZOLPIDEM TARTRATE 10 MG TABLET",
+            "system": "http://hl7.org/fhir/sid/ndc"
+          },
+          {
+            "code": "854873",
+            "display": "ZOLPIDEM TARTRATE 10 MG TABLET",
+            "system": "http://www.nlm.nih.gov/research/umls/rxnorm"
+          }
+        ],
+        "text": "ZOLPIDEM TARTRATE 10 MG TABLET"
+      },
+      "requester": {
+        "display": "HID TEST PRESCRIBER"
+      },
+      "resourceType": "MedicationRequest"
+    }
 
 
 def test_emr_med_request(app_w_iss, requests_mock, emr_med_request_bundle):
@@ -144,3 +183,17 @@ def test_extension_lookup(auth_extensions):
 
     token_url = get_extension_value(url='token', extensions=auth_extensions)
     assert token_url == 'https://cpsapisandbox.virenceaz.com:9443/demoAPIServer/oauth2/token'
+
+
+def test_dosage_instruction(pdmp_medication_request):
+    """Test MedicationRequest.dosageInstruction CDS annotations"""
+    supply = pdmp_medication_request['dispenseRequest']['expectedSupplyDuration']['value']
+    quantity = pdmp_medication_request['dispenseRequest']['quantity']['value']
+
+    from sof_wrapper.api import fhir
+    annotated_pdmp_med = fhir.add_cds_extensions(pdmp_medication_request)
+
+    assert annotated_pdmp_med['dispenseRequest']['dosageInstruction'][0]['timing']['repeat']['frequency'] == quantity
+    assert annotated_pdmp_med['dispenseRequest']['dosageInstruction'][0]['timing']['repeat']['period'] == supply
+
+    assert annotated_pdmp_med['dispenseRequest']['dosageInstruction'][0]['doseAndRate'][0]['doseQuantity']['value'] == quantity/supply
