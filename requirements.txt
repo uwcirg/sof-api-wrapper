@@ -10,7 +10,7 @@ certifi==2020.6.20        # via requests
 cffi==1.14.1              # via cryptography
 chardet==3.0.4            # via requests
 click==7.1.2              # via flask
-cryptography==3.0         # via authlib, python-jose
+cryptography==3.2         # via authlib, python-jose
 ecdsa==0.14.1             # via python-jose
 flask-session==0.3.2      # via sof_wrapper (setup.py)
 flask==1.1.2              # via flask-session, sof_wrapper (setup.py)
