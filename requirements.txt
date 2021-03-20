@@ -16,7 +16,7 @@ flask-session==0.3.2      # via sof_wrapper (setup.py)
 flask==1.1.2              # via flask-session, sof_wrapper (setup.py)
 idna==2.10                # via requests
 itsdangerous==1.1.0       # via flask
-jinja2==2.11.2            # via flask
+jinja2==2.11.3            # via flask
 markupsafe==1.1.1         # via jinja2
 pyasn1==0.4.8             # via python-jose, rsa
 pycparser==2.20           # via cffi
