@@ -13,7 +13,7 @@ def collate_results(*result_sets):
     results = {'resourceType': 'Bundle', 'entry': []}
 
     for rs in result_sets:
-        results['entry'].extend(rs['entry'])
+        results['entry'].extend(rs.get('entry', []))
 
     results['total'] = len(results['entry'])
     return results
