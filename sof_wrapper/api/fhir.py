@@ -13,7 +13,8 @@ def collate_results(*result_sets):
     results = {'resourceType': 'Bundle', 'entry': []}
 
     for rs in result_sets:
-        results['entry'].extend(rs['entry'])
+        if 'entry' in rs:
+            results['entry'].extend(rs['entry'])
 
     results['total'] = len(results['entry'])
     return results
@@ -246,7 +247,8 @@ def route_fhir(relative_path, session_id):
     current_app.logger.debug('received session_id as path parameter: %s', session_id)
 
     session_data = get_redis_session_data(session_id)
-    patient_id = session_data.get('token_response', {}).get('patient')
+    # prefer patient ID baked into access token JWT by EHR; fallback to initial transparent launch token for fEMR
+    patient_id = session_data.get('token_response', {}).get('patient') or session_data.get('launch_token_patient')
     if not patient_id:
         abort(400, "no patient ID found in session; can't continue")
 
