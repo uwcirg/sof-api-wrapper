@@ -44,7 +44,7 @@ def add_cds_extensions(med):
     }]
 
     annotated_med = med.copy()
-    annotated_med['dispenseRequest'].setdefault('dosageInstruction', dosage_instruction)
+    annotated_med.setdefault('dosageInstruction', dosage_instruction)
 
     return annotated_med
 

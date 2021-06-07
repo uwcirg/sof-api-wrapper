@@ -193,7 +193,7 @@ def test_dosage_instruction(pdmp_medication_request):
     from sof_wrapper.api import fhir
     annotated_pdmp_med = fhir.add_cds_extensions(pdmp_medication_request)
 
-    assert annotated_pdmp_med['dispenseRequest']['dosageInstruction'][0]['timing']['repeat']['frequency'] == quantity
-    assert annotated_pdmp_med['dispenseRequest']['dosageInstruction'][0]['timing']['repeat']['period'] == supply
+    assert annotated_pdmp_med['dosageInstruction'][0]['timing']['repeat']['frequency'] == quantity
+    assert annotated_pdmp_med['dosageInstruction'][0]['timing']['repeat']['period'] == supply
 
-    assert annotated_pdmp_med['dispenseRequest']['dosageInstruction'][0]['doseAndRate'][0]['doseQuantity']['value'] == quantity/supply
+    assert annotated_pdmp_med['dosageInstruction'][0]['doseAndRate'][0]['doseQuantity']['value'] == quantity/supply
