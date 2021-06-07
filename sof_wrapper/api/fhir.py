@@ -20,6 +20,14 @@ def collate_results(*result_sets):
     return results
 
 
+def gcd(a, b):
+    """Find the greatest common divisor between two given floats or integers"""
+    if b == 0:
+        return a
+    else:
+        return gcd(b, a%b)
+
+
 def add_cds_extensions(med):
     """Add FHIR attributes as necessary to support frontend CDS"""
 
@@ -28,12 +36,13 @@ def add_cds_extensions(med):
     if not expected_supply_duration or not quantity:
         return med
 
+    timing_gcd = gcd(quantity, expected_supply_duration)
     # TODO: reduce frequency to lowest terms (fractions.gcd), if necessary
     dosage_instruction = [{
         'timing': {
             "repeat": {
-                "frequency": quantity,
-                "period": expected_supply_duration,
+                "frequency": quantity/timing_gcd,
+                "period": expected_supply_duration/timing_gcd,
                 "periodUnit": "d"
             }
         },
