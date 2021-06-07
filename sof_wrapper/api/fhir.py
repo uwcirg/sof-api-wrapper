@@ -37,7 +37,6 @@ def add_cds_extensions(med):
         return med
 
     timing_gcd = gcd(quantity, expected_supply_duration)
-    # TODO: reduce frequency to lowest terms (fractions.gcd), if necessary
     dosage_instruction = [{
         'timing': {
             "repeat": {
