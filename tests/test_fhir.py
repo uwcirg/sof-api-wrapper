@@ -197,4 +197,4 @@ def test_dosage_instruction(pdmp_medication_request):
     assert annotated_pdmp_med['dosageInstruction'][0]['timing']['repeat']['frequency'] == quantity/timing_gcd
     assert annotated_pdmp_med['dosageInstruction'][0]['timing']['repeat']['period'] == supply/timing_gcd
 
-    assert annotated_pdmp_med['dosageInstruction'][0]['doseAndRate'][0]['doseQuantity']['value'] == quantity/supply
+    assert annotated_pdmp_med['dosageInstruction'][0]['doseAndRate'][0]['doseQuantity']['value'] == quantity/(supply*(quantity/timing_gcd))
