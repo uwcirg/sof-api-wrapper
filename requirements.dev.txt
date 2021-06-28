@@ -4,6 +4,8 @@
 #
 #    pip-compile --output-file=requirements.dev.txt
 #
+--requirement requirements.txt
+
 attrs==19.3.0             # via pytest
 filelock==3.0.12          # via tox, virtualenv
 importlib-metadata==1.7.0  # via pluggy, pytest, tox, virtualenv
