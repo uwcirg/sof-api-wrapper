@@ -279,9 +279,12 @@ def route_fhir(relative_path, session_id):
     # use session lookup across sessions if necessary
     upstream_fhir_base_url = iss
     upstream_fhir_url = '/'.join((upstream_fhir_base_url, relative_path))
+
+    passthrough_headers = {'Authorization', 'Accept'}
     upstream_headers = {}
-    if 'Authorization' in request.headers:
-        upstream_headers = {'Authorization': request.headers['Authorization']}
+    for header_name in passthrough_headers:
+        if header_name in request.headers:
+            upstream_headers[header_name] = request.headers[header_name]
 
     upstream_response = requests.get(
         url=upstream_fhir_url,
@@ -289,7 +292,7 @@ def route_fhir(relative_path, session_id):
         params=request.args,
     )
     upstream_response.raise_for_status()
-    return upstream_response.json()
+    return (upstream_response.text, upstream_response.status_code, upstream_response.headers.items())
 
 
 @blueprint.after_request
