@@ -21,3 +21,5 @@ jobs:
           # configured at repo settings/secrets
           username: ${{ secrets.DOCKER_USERNAME }}
           password: ${{ secrets.DOCKER_PASSWORD }}
+          # create docker image tags to match git tags
+          tag_names: true
