@@ -1,36 +1,9 @@
 # docker continuous delivery
 # deliver docker images to configured repo with tags to match branches and git tags
 ---
-name: Test & Build/Deliver
+name: Build & Deliver
 on: [push]
 jobs:
-  test:
-    runs-on: ubuntu-latest
-    container: python:3.7
-    # Service containers to run with `container-job`
-    services:
-      # Label used to access the service container
-      redis:
-        # Docker Hub image
-        image: redis
-        # Set health checks to wait until redis has started
-        options: >-
-          --health-cmd "redis-cli ping"
-          --health-interval 10s
-          --health-timeout 5s
-          --health-retries 5
-    env:
-      SESSION_REDIS: redis://redis:6379/0
-    steps:
-      - uses: actions/checkout@v1
-
-      - name: Install test runner
-        run: python3 -m pip install tox
-
-      - name: Run tests
-        run: tox
-
-
   build:
     # only build if tests pass
     # needs: [test]
@@ -48,4 +21,5 @@ jobs:
           # configured at repo settings/secrets
           username: ${{ secrets.DOCKER_USERNAME }}
           password: ${{ secrets.DOCKER_PASSWORD }}
-          tag_semver: true
+          # create docker image tags to match git tags
+          tag_names: true
