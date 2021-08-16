@@ -28,42 +28,13 @@ def gcd(a, b):
         return gcd(b, a%b)
 
 
-def add_cds_extensions(med):
-    """Add FHIR attributes as necessary to support frontend CDS"""
-
-    expected_supply_duration = med.get('dispenseRequest', {}).get('expectedSupplyDuration', {}).get('value')
-    quantity = med.get('dispenseRequest', {}).get('quantity', {}).get('value')
-    if not expected_supply_duration or not quantity:
-        return med
-
-    timing_gcd = gcd(quantity, expected_supply_duration)
-    dosage_instruction = [{
-        'timing': {
-            "repeat": {
-                "frequency": quantity/timing_gcd,
-                "period": expected_supply_duration/timing_gcd,
-                "periodUnit": "d"
-            }
-        },
-        "doseAndRate": [
-            # dosage per timing repeat
-            {"doseQuantity": {"value": quantity/(expected_supply_duration*(quantity/timing_gcd))}}
-        ]
-    }]
-
-    annotated_med = med.copy()
-    annotated_med.setdefault('dosageInstruction', dosage_instruction)
-
-    return annotated_med
-
-
 def annotate_meds(med_bundle):
     """Annotate bundled resources and return a copy"""
     annotated_bundle = med_bundle.copy()
     annotated_bundle['entry'] = []
 
     for med in med_bundle['entry']:
-        annotated_bundle['entry'].append(add_cds_extensions(med))
+        annotated_bundle['entry'].append(med)
     return annotated_bundle
 
 
