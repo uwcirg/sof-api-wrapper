@@ -184,17 +184,3 @@ def test_extension_lookup(auth_extensions):
     token_url = get_extension_value(url='token', extensions=auth_extensions)
     assert token_url == 'https://cpsapisandbox.virenceaz.com:9443/demoAPIServer/oauth2/token'
 
-
-def test_dosage_instruction(pdmp_medication_request):
-    """Test MedicationRequest.dosageInstruction CDS annotations"""
-    supply = pdmp_medication_request['dispenseRequest']['expectedSupplyDuration']['value']
-    quantity = pdmp_medication_request['dispenseRequest']['quantity']['value']
-
-    from sof_wrapper.api import fhir
-    annotated_pdmp_med = fhir.add_cds_extensions(pdmp_medication_request)
-
-    timing_gcd = fhir.gcd(supply, quantity)
-    assert annotated_pdmp_med['dosageInstruction'][0]['timing']['repeat']['frequency'] == quantity/timing_gcd
-    assert annotated_pdmp_med['dosageInstruction'][0]['timing']['repeat']['period'] == supply/timing_gcd
-
-    assert annotated_pdmp_med['dosageInstruction'][0]['doseAndRate'][0]['doseQuantity']['value'] == quantity/(supply*(quantity/timing_gcd))
