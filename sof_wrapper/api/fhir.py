@@ -20,14 +20,6 @@ def collate_results(*result_sets):
     return results
 
 
-def gcd(a, b):
-    """Find the greatest common divisor between two given floats or integers"""
-    if b == 0:
-        return a
-    else:
-        return gcd(b, a%b)
-
-
 def annotate_meds(med_bundle):
     """Annotate bundled resources and return a copy"""
     annotated_bundle = med_bundle.copy()
