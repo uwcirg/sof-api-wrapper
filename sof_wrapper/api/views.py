@@ -12,14 +12,7 @@ def root():
     return {'ok': True}
 
 
-@base_blueprint.after_request
-def add_header(response):
-    response.headers['Access-Control-Allow-Origin'] = '*'
-
-    return response
-
-
-@base_blueprint.route('/auditlog', methods=('OPTIONS', 'POST'))
+@base_blueprint.route('/auditlog', methods=('POST',))
 def auditlog_addevent():
     """Add event to audit log
 
@@ -87,7 +80,7 @@ def auditlog_addevent():
     return jsonify(message='ok')
 
 
-@base_blueprint.route('/save_data', methods=('OPTIONS', 'POST'))
+@base_blueprint.route('/save_data', methods=('POST',))
 def save_data():
     """Write JSON to disk
 
