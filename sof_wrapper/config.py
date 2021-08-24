@@ -5,6 +5,7 @@ Use env var to override
 import os
 import redis
 
+DEBUG_OUTPUT_DIR = os.getenv("DEBUG_OUTPUT_DIR", '/tmp')
 SERVER_NAME = os.getenv("SERVER_NAME")
 SECRET_KEY = os.getenv("SECRET_KEY")
 # URL scheme to use outside of request context

@@ -1,4 +1,5 @@
 from flask import Flask
+from flask_cors import CORS
 from logging import config as logging_config
 import os
 from werkzeug.middleware.proxy_fix import ProxyFix
@@ -13,6 +14,7 @@ def create_app(testing=False, cli=False):
     app = Flask('sof_wrapper')
     app.config.from_object('sof_wrapper.config')
     app.config['TESTING'] = testing
+    CORS(app)
 
     configure_logging(app)
     configure_extensions(app, cli)
