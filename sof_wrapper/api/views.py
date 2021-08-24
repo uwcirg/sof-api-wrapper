@@ -127,6 +127,8 @@ def save_data():
               description: Result, typically "ok"
 
     """
+    if app.config["ENV"] != "development:
+        return jsonify(message="Disabled on non-dev deploys"), 401
     body = request.get_json()
     if not body:
         return jsonify(message="Missing JSON data"), 400
