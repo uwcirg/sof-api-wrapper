@@ -3,6 +3,8 @@ import requests
 
 from flask import Blueprint, abort, current_app, request, session, g
 
+from sof_wrapper.rxnav import add_drug_classes
+
 blueprint = Blueprint('fhir', __name__)
 r2prefix = '/v/r2/fhir'
 r4prefix = '/v/r4/fhir'
@@ -26,7 +28,7 @@ def annotate_meds(med_bundle):
     annotated_bundle['entry'] = []
 
     for med in med_bundle['entry']:
-        annotated_bundle['entry'].append(med)
+        annotated_bundle['entry'].append(add_drug_classes(med, rxnav_url=current_app.config["RXNAV_URL"]))
     return annotated_bundle
 
 

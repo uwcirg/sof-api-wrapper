@@ -28,3 +28,5 @@ PDMP_URL = os.getenv("PDMP_URL")
 
 PHR_URL = os.getenv("PHR_URL")
 PHR_TOKEN = os.getenv("PHR_TOKEN")
+
+RXNAV_URL = os.getenv("RXNAV_URL", "https://rxnav.nlm.nih.gov")
