@@ -194,7 +194,7 @@ def test_drug_classes(pdmp_medication_request):
 
     drug_class_extension = {
         "url": "http://cosri.org/fhir/drug_class",
-        "valueString": 'SEDATIVES/HYPNOTICS,OTHER',
+        "valueString": 'sedative',
     }
 
     assert drug_class_extension in annotated_pdmp_med['medicationCodeableConcept']['extension']
