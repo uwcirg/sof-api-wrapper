@@ -1,5 +1,6 @@
 import requests
-
+import json
+import os
 
 def add_drug_classes(med, rxnav_url):
     """Add Drug Classes"""
@@ -14,8 +15,11 @@ def add_drug_classes(med, rxnav_url):
     rxcui = med_code["code"]
 
     rxnav_response = get_drug_classes(rxcui, rxnav_url)
-    # TODO integrate class map
-    drug_classes = set(drug_class_filter(rxnav_response))
+    drug_class_map = load_drug_class_map()
+    drug_classes = set(
+        drug_class_map[drug_class]
+        for drug_class in drug_class_filter(rxnav_response) if drug_class in drug_class_map
+    )
 
     annotated_med = med.copy()
     med_cc_extensions = annotated_med["medicationCodeableConcept"].get("extension", [])
@@ -48,3 +52,13 @@ def drug_class_filter(rxnav_response):
     for rx_class in rxnav_response["rxclassDrugInfoList"]["rxclassDrugInfo"]:
         yield rx_class["rxclassMinConceptItem"]["className"]
 
+
+def load_drug_class_map(filename="rx-class-map.json"):
+    # TODO cache contents
+    # TODO move datafile and rxnav to separate directory
+    module_path = os.path.dirname(__file__)
+    filepath = os.path.join(module_path, filename)
+
+    with open(filepath, 'r') as map_file:
+        drug_class_map = json.loads(map_file.read())
+    return drug_class_map
