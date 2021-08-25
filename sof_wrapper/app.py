@@ -2,6 +2,8 @@ from flask import Flask
 from flask_cors import CORS
 from logging import config as logging_config
 import os
+import redis
+import requests_cache
 from werkzeug.middleware.proxy_fix import ProxyFix
 
 from sof_wrapper import auth, api
@@ -17,11 +19,39 @@ def create_app(testing=False, cli=False):
     CORS(app)
 
     configure_logging(app)
+    configure_cache(app)
     configure_extensions(app, cli)
     register_blueprints(app)
     configure_proxy(app)
 
     return app
+
+
+def configure_cache(app):
+    """Configure caching libraries"""
+
+    # NB this effectively turns caching on for ALL requests API calls.
+    # To temporarily disable, wrap w/ context manager:
+    #
+    #   with requests_cache.disabled():
+    #     requests.get('http://httpbin.org/get')
+
+    # Catch configuration problems early; require REQUEST_CACHE_URL
+    if not app.config.get('REQUEST_CACHE_URL'):
+        msg = "required configuration 'REQUEST_CACHE_URL' not present"
+        app.logger.error(msg)
+        raise RuntimeError(msg)
+
+    app.logger.info(
+        "Initiating requests.cache with %s", app.config.get('REQUEST_CACHE_URL'))
+    requests_cache.install_cache(
+        cache_name=app.name,
+        backend='redis',
+        expire_after=app.config['REQUEST_CACHE_EXPIRE'],
+        include_get_headers=True,
+        old_data_on_error=True,
+        connection=redis.StrictRedis.from_url(app.config.get("REQUEST_CACHE_URL")),
+    )
 
 
 def configure_logging(app):
