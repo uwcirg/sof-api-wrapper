@@ -214,4 +214,8 @@ def before_request_func():
 def after_request_func(response):
     current_app.logger.debug('after_request session: %s', session)
     current_app.logger.debug('after_request authlib state present: %s','_sof_authlib_state_' in session)
+    # allow requests with cookies to auth-info endpoint
+    if request.path == "/auth/auth-info":
+        response.headers['Access-Control-Allow-Credentials'] = 'true'
+
     return response
