@@ -29,6 +29,9 @@ def create_app(testing=False, cli=False):
 
 def configure_cache(app):
     """Configure caching libraries"""
+    # caching breaks all forms of testing, not worth workarounds
+    if app.config['TESTING']:
+        return
 
     # NB this effectively turns caching on for ALL requests API calls.
     # To temporarily disable, wrap w/ context manager:
