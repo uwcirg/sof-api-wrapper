@@ -1,6 +1,10 @@
-import requests
+from flask import current_app
 import json
+import timeit
 import os
+
+from .extensions import cached_session
+
 
 def add_drug_classes(med, rxnav_url):
     """Add Drug Classes"""
@@ -39,12 +43,12 @@ def get_drug_classes(rxcui, rxnav_url):
 
     https://rxnav.nlm.nih.gov/api-RxClass.getClassByRxNormDrugId.html
     """
-
-    # NB requests-cached
-    response = requests.get(
+    b4 = timeit.default_timer()
+    response = cached_session.get(
         url=f"{rxnav_url}/REST/rxclass/class/byRxcui.json",
         params={"rxcui": rxcui},
     )
+    current_app.logger.debug(f"rxnav request time: {timeit.default_timer()-b4}")
     return response.json()
 
 

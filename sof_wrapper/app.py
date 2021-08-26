@@ -4,10 +4,11 @@ from logging import config as logging_config
 import os
 import redis
 import requests_cache
+from requests_cache import CachedSession
 from werkzeug.middleware.proxy_fix import ProxyFix
 
 from sof_wrapper import auth, api
-from sof_wrapper.extensions import oauth, sess
+from sof_wrapper.extensions import cached_session, oauth, sess
 
 
 def create_app(testing=False, cli=False):
@@ -30,8 +31,8 @@ def create_app(testing=False, cli=False):
 def configure_cache(app):
     """Configure caching libraries"""
     # caching breaks all forms of testing, not worth workarounds
-    if app.config['TESTING']:
-        return
+    #if app.config['TESTING']:
+    #    return
 
     # NB this effectively turns caching on for ALL requests API calls.
     # To temporarily disable, wrap w/ context manager:
@@ -46,8 +47,11 @@ def configure_cache(app):
         raise RuntimeError(msg)
 
     app.logger.info(
-        "Initiating requests.cache with %s", app.config.get('REQUEST_CACHE_URL'))
-    requests_cache.install_cache(
+        "Initiating requests.cached_session with %s", app.config.get('REQUEST_CACHE_URL'))
+
+    # Configure CachedSession as blanket requests_cache is silently failing
+    global cached_session  # set variable from extensions, not a local
+    cached_session = CachedSession(
         cache_name=app.name,
         backend='redis',
         expire_after=app.config['REQUEST_CACHE_EXPIRE'],

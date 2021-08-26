@@ -185,12 +185,13 @@ def test_extension_lookup(auth_extensions):
     assert token_url == 'https://cpsapisandbox.virenceaz.com:9443/demoAPIServer/oauth2/token'
 
 
-def test_drug_classes(pdmp_medication_request):
+def test_drug_classes(app, pdmp_medication_request):
     """Test RxNav drug class annotations"""
 
     from sof_wrapper.rxnav import add_drug_classes
     # TODO mock HTTP request to RxNav
-    annotated_pdmp_med = add_drug_classes(pdmp_medication_request, rxnav_url="https://rxnav.nlm.nih.gov")
+    with app.app_context():
+        annotated_pdmp_med = add_drug_classes(pdmp_medication_request, rxnav_url="https://rxnav.nlm.nih.gov")
 
     drug_class_extension = {
         "url": "http://cosri.org/fhir/drug_class",
