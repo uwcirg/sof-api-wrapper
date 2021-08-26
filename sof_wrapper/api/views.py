@@ -151,8 +151,7 @@ def save_data():
             message="no path info allowed in `filename` parameter"), 400
 
     if os.path.exists(full_path):
-        return jsonify(
-            message=f"file '{filename}' exists, won't overwrite"), 400
+        pass  # overwrite by design on subsequent request
 
     with open(full_path, 'w') as fp:
         json.dump(body, fp, indent=4)
