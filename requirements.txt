@@ -24,8 +24,10 @@ pycparser==2.20           # via cffi
 python-jose[cryptography]==3.2.0  # via sof_wrapper (setup.py)
 python-json-logger==0.1.11  # via sof_wrapper (setup.py)
 redis==3.5.3              # via sof_wrapper (setup.py)
-requests==2.24.0          # via sof_wrapper (setup.py)
+requests-cache==0.6.4     # via sof_wrapper (setup.py)
+requests==2.25.1          # via sof_wrapper (setup.py)
 rsa==4.6                  # via python-jose
-six==1.15.0               # via cryptography, ecdsa, python-jose
+six==1.16.0               # via cryptography, ecdsa, python-jose
 urllib3==1.25.10          # via requests
+url-normalize==1.4.3      # via requests-cache
 werkzeug==1.0.1           # via flask

@@ -1,5 +1,6 @@
 from flask import Blueprint, current_app, redirect, request, url_for, session
 import requests
+import requests_cache
 
 from sof_wrapper.extensions import oauth
 from sof_wrapper.auth.helpers import extract_payload, format_as_jwt
@@ -88,10 +89,11 @@ def launch():
 
     # fetch conformance statement from /metadata
     ehr_metadata_url = '%s/metadata' % iss
-    metadata = requests.get(
-        ehr_metadata_url,
-        headers={'Accept': 'application/json'},
-    )
+    with requests_cache.disabled():
+        metadata = requests.get(
+            ehr_metadata_url,
+            headers={'Accept': 'application/json'},
+        )
     metadata.raise_for_status()
     metadata_security = metadata.json()['rest'][0].get('security')
 

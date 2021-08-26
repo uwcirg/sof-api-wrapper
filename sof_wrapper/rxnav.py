@@ -40,6 +40,7 @@ def get_drug_classes(rxcui, rxnav_url):
     https://rxnav.nlm.nih.gov/api-RxClass.getClassByRxNormDrugId.html
     """
 
+    # NB requests-cached
     response = requests.get(
         url=f"{rxnav_url}/REST/rxclass/class/byRxcui.json",
         params={"rxcui": rxcui},
