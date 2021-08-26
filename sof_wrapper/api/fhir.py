@@ -1,6 +1,5 @@
 import pickle
 import requests
-import requests_cache
 
 from flask import Blueprint, abort, current_app, request, session, g
 
@@ -57,8 +56,7 @@ def emr_meds(emr_url, params):
     # TODO: enhance for audit or remove PHI?
     current_app.logger.debug(
         f"fire request for emr meds on {emr_url}/?{params}")
-    with requests_cache.disabled():
-        response = requests.get(emr_url, params)
+    response = requests.get(emr_url, params)
     response.raise_for_status()
     current_app.logger.debug("emr returned {} MedicationRequests".format(
         len(response.json().get("entry", []))))
@@ -117,8 +115,7 @@ def pdmp_meds(pdmp_url, params):
     # TODO: enhance for audit or remove PHI?
     current_app.logger.debug(
         f"fire request for PDMP meds on {pdmp_url}/?{params}")
-    with requests_cache.disabled():
-        response = requests.get(pdmp_url, params=params)
+    response = requests.get(pdmp_url, params=params)
     response.raise_for_status()
     current_app.logger.debug("PDMP returned {} MedicationRequest/Orders".format(
         len(response.json().get("entry", []))))
@@ -172,15 +169,14 @@ def observations():
     # todo: lookup from frontend with Patient details
     phr_params = {'patient._id': '53b07006-f454-ea11-8241-0a0332b55c97'}
 
-    with requests_cache.disabled():
-        phr_observations = requests.get(
-            url=phr_url,
-            params=phr_params,
-            headers={
-                'Authorization': 'Bearer %s' % current_app.config['PHR_TOKEN'],
-                'Accept': 'application/json',
-            },
-        )
+    phr_observations = requests.get(
+        url=phr_url,
+        params=phr_params,
+        headers={
+            'Authorization': 'Bearer %s' % current_app.config['PHR_TOKEN'],
+            'Accept': 'application/json',
+        },
+    )
     phr_observations.raise_for_status()
     return phr_observations.json()
 
@@ -193,8 +189,7 @@ def patient_by_id(id):
         return session[key]
 
     patient_url = f'{base_url}/Patient/{id}'
-    with requests_cache.disabled():
-        response = requests.get(patient_url)
+    response = requests.get(patient_url)
     response.raise_for_status()
     patient_fhir = response.json()
     session[key] = patient_fhir
@@ -253,12 +248,11 @@ def route_fhir(relative_path, session_id):
     if 'Authorization' in request.headers:
         upstream_headers = {'Authorization': request.headers['Authorization']}
 
-    with requests_cache.disabled():
-        upstream_response = requests.get(
-            url=upstream_fhir_url,
-            headers=upstream_headers,
-            params=request.args,
-        )
+    upstream_response = requests.get(
+        url=upstream_fhir_url,
+        headers=upstream_headers,
+        params=request.args,
+    )
     upstream_response.raise_for_status()
     return upstream_response.json()
 
