@@ -14,7 +14,7 @@ more-itertools==8.4.0     # via pytest
 packaging==20.4           # via pytest, tox
 pathlib2==2.3.5           # via pytest
 pluggy==0.13.1            # via pytest, tox
-py==1.9.0                 # via pytest, tox
+py==1.10.0                 # via pytest, tox
 pyparsing==2.4.7          # via packaging
 pytest==6.0.1             # via sof_wrapper (setup.py)
 pytest-mock==3.3.0        # via pytest-mock (setup.py)
