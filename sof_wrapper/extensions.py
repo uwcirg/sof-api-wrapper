@@ -23,14 +23,21 @@ class CS_Singleton(object):
     @property
     def cached_session(self):
         if self._cached_session is None:
+            if current_app.config['TESTING']:
+                backend = 'memory'
+                connection = None
+            else:
+                backend = 'redis'
+                connection = redis.StrictRedis.from_url(
+                    current_app.config.get("REQUEST_CACHE_URL"))
+
             self._cached_session = CachedSession(
                 cache_name=current_app.name,
-                backend='redis',
+                backend=backend,
                 expire_after=current_app.config['REQUEST_CACHE_EXPIRE'],
                 include_get_headers=True,
                 old_data_on_error=True,
-                connection=redis.StrictRedis.from_url(
-                    current_app.config.get("REQUEST_CACHE_URL")),
+                connection=connection
             )
 
         return self._cached_session
