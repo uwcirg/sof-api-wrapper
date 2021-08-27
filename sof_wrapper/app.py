@@ -2,8 +2,6 @@ from flask import Flask
 from flask_cors import CORS
 from logging import config as logging_config
 import os
-import redis
-import requests_cache
 from werkzeug.middleware.proxy_fix import ProxyFix
 
 from sof_wrapper import auth, api
@@ -19,7 +17,6 @@ def create_app(testing=False, cli=False):
     CORS(app)
 
     configure_logging(app)
-    configure_cache(app)
     configure_extensions(app, cli)
     register_blueprints(app)
     configure_proxy(app)
@@ -27,42 +24,12 @@ def create_app(testing=False, cli=False):
     return app
 
 
-def configure_cache(app):
-    """Configure caching libraries"""
-    # caching breaks all forms of testing, not worth workarounds
-    if app.config['TESTING']:
-        return
-
-    # NB this effectively turns caching on for ALL requests API calls.
-    # To temporarily disable, wrap w/ context manager:
-    #
-    #   with requests_cache.disabled():
-    #     requests.get('http://httpbin.org/get')
-
-    # Catch configuration problems early; require REQUEST_CACHE_URL
-    if not app.config.get('REQUEST_CACHE_URL'):
-        msg = "required configuration 'REQUEST_CACHE_URL' not present"
-        app.logger.error(msg)
-        raise RuntimeError(msg)
-
-    app.logger.info(
-        "Initiating requests.cache with %s", app.config.get('REQUEST_CACHE_URL'))
-    requests_cache.install_cache(
-        cache_name=app.name,
-        backend='redis',
-        expire_after=app.config['REQUEST_CACHE_EXPIRE'],
-        include_get_headers=True,
-        old_data_on_error=True,
-        connection=redis.StrictRedis.from_url(app.config.get("REQUEST_CACHE_URL")),
-    )
-
-
 def configure_logging(app):
     app.logger  # must call to initialize prior to config or it'll replace
 
     config = 'logging.ini'
-    if app.config.get('TESTING'):
-        # look above the testing dir when testing
+    if not os.path.exists(config):
+        # look above the testing dir when testing or debugging locally
         config = os.path.join('..', config)
 
     logging_config.fileConfig(config, disable_existing_loggers=False)
