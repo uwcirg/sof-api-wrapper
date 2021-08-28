@@ -39,7 +39,7 @@ def emr_med_requests(patient_id):
     emr_url = f'{base_url}/MedicationRequest'
     params = {"subject": f"Patient/{patient_id}"} if patient_id else {}
 
-    return emr_meds(emr_url, params)
+    return emr_meds(emr_url, params, request.headers)
 
 
 @blueprint.route(f'{r2prefix}/emr/MedicationOrder', defaults={'patient_id': None})
@@ -49,14 +49,23 @@ def emr_med_orders(patient_id):
     emr_url = f'{base_url}/MedicationOrder'
     params = {"patient": f"Patient/{patient_id}"} if patient_id else {}
 
-    return emr_meds(emr_url, params)
+    return emr_meds(emr_url, params, request.headers)
 
 
-def emr_meds(emr_url, params):
+def emr_meds(emr_url, params, headers):
     # TODO: enhance for audit or remove PHI?
     current_app.logger.debug(
         f"fire request for emr meds on {emr_url}/?{params}")
-    response = requests.get(emr_url, params)
+
+    upstream_headers = {}
+    if 'Authorization' in headers:
+        upstream_headers = {'Authorization': headers['Authorization']}
+
+    response = requests.get(
+        url=emr_url,
+        params=params,
+        headers=upstream_headers,
+    )
     response.raise_for_status()
     current_app.logger.debug("emr returned {} MedicationRequests".format(
         len(response.json().get("entry", []))))
