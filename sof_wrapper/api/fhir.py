@@ -198,7 +198,16 @@ def patient_by_id(id):
         return session[key]
 
     patient_url = f'{base_url}/Patient/{id}'
-    response = requests.get(patient_url)
+
+
+    upstream_headers = {}
+    if 'Authorization' in request.headers:
+        upstream_headers = {'Authorization': request.headers['Authorization']}
+
+    response = requests.get(
+        url=patient_url,
+        headers=upstream_headers,
+    )
     response.raise_for_status()
     patient_fhir = response.json()
     session[key] = patient_fhir
