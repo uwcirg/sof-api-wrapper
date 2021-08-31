@@ -77,7 +77,7 @@ def auditlog_addevent():
 
     extra = {k: v for k, v in body.items()}
 
-    log_level_method = getattr(logging, level.lower())
+    log_level_method = getattr(current_app.logger, level.lower())
     log_level_method(body, extra=extra)
     return jsonify(message='ok')
 
