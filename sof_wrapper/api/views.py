@@ -58,13 +58,6 @@ def auditlog_addevent():
             message:
               type: string
               description: Result, typically "ok"
-            level:
-              type: string
-              description: log level, such as "debug" or "error"
-            extra:
-              type: dictionary
-              description: used for extending, for example add `tags` with
-                a list of strings
       401:
         description: if missing valid OAuth token
     security:
@@ -75,14 +68,15 @@ def auditlog_addevent():
     if not body:
         return jsonify(message="Missing JSON data"), 400
 
-    message = body.get('message')
+    message = body.pop('message', None)
     level = body.pop('level', 'info')
     if not hasattr(logging, level.upper()):
         return jsonify(message="Unknown logging `level`: {level}"), 400
     if not message:
         return jsonify(message="missing required 'message' in post"), 400
 
-    extra = body.get('extra', [])
+    extra = {k: v for k, v in body.items()}
+
     log_level_method = getattr(logging, level.lower())
     log_level_method(body, extra=extra)
     return jsonify(message='ok')
