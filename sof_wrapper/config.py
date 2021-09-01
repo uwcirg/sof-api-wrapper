@@ -24,6 +24,8 @@ SOF_CLIENT_SCOPES = os.getenv("SOF_CLIENT_SCOPES", "patient/*.read launch/patien
 SOF_ACCESS_TOKEN_URL = os.getenv("SOF_ACCESS_TOKEN_URL")
 SOF_AUTHORIZE_URL = os.getenv("SOF_AUTHORIZE_URL")
 
+LOGSERVER_TOKEN = os.getenv('LOGSERVER_TOKEN')
+LOGSERVER_URL = os.getenv('LOGSERVER_URL')
 
 LAUNCH_DEST = os.getenv("LAUNCH_DEST")
 

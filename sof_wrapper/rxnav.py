@@ -49,7 +49,9 @@ def get_drug_classes(rxcui, rxnav_url):
         url=f"{rxnav_url}/REST/rxclass/class/byRxcui.json",
         params={"rxcui": rxcui},
     )
-    current_app.logger.debug(f"rxnav request time: {timeit.default_timer()-b4}")
+    delta = timeit.default_timer() - b4
+    if delta > 0.01:
+        current_app.logger.debug(f"uncached rxnav {rxcui} request time: {delta}")
     return response.json()
 
 

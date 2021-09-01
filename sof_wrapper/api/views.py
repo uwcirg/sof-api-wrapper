@@ -68,15 +68,17 @@ def auditlog_addevent():
     if not body:
         return jsonify(message="Missing JSON data"), 400
 
-    message = body.get('message')
+    message = body.pop('message', None)
     level = body.pop('level', 'info')
     if not hasattr(logging, level.upper()):
         return jsonify(message="Unknown logging `level`: {level}"), 400
     if not message:
         return jsonify(message="missing required 'message' in post"), 400
 
-    log_level_method = getattr(logging, level.lower())
-    log_level_method(body)
+    extra = {k: v for k, v in body.items()}
+
+    log_level_method = getattr(current_app.logger, level.lower())
+    log_level_method(body, extra=extra)
     return jsonify(message='ok')
 
 
