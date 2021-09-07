@@ -39,7 +39,6 @@ def emr_med_requests(patient_id):
     base_url = session.get('iss') or get_redis_session_data(g.session_id).get('iss')
     emr_url = f'{base_url}/MedicationRequest'
     params = {"subject": f"Patient/{patient_id}"} if patient_id else {}
-
     return emr_meds(emr_url, params, request.headers)
 
 
@@ -88,6 +87,10 @@ def pdmp_med_requests(**kwargs):
         base_url=current_app.config['PDMP_URL'],
     )
     params = kwargs or request.args
+    user = session.get('user') or get_redis_session_data(g.session_id).get('user')
+    if not user or 'DEA' not in user:
+        jsonify_abort(status_code=400, message=f"DEA not found")
+    params['DEA'] = user['DEA']
     return pdmp_meds(pdmp_url, params)
 
 
@@ -106,6 +109,10 @@ def pdmp_med_orders(**kwargs):
         base_url=current_app.config['PDMP_URL'],
         )
     params = kwargs or request.args
+    user = session.get('user') or get_redis_session_data(g.session_id).get('user')
+    if not user or 'DEA' not in user:
+        jsonify_abort(status_code=400, message=f"DEA not found")
+    params['DEA'] = user['DEA']
     return pdmp_meds(pdmp_url, params)
 
 
@@ -122,13 +129,12 @@ def pdmp_meds(pdmp_url, params):
             'subject:Patient.birthdate': 'eq1945-01-15'
         }
 
-    # TODO: enhance for audit or remove PHI?
-    current_app.logger.debug(
-        f"fire request for PDMP meds on {pdmp_url}/?{params}")
+    extra = {'user': session.get('user') or get_redis_session_data(g.session_id).get('user')}
+    current_app.logger.info(f"fire request for PDMP meds on {pdmp_url}/?{params}", extra=extra)
     response = requests.get(pdmp_url, params=params)
     response.raise_for_status()
-    current_app.logger.debug("PDMP returned {} MedicationRequest/Orders".format(
-        len(response.json().get("entry", []))))
+    current_app.logger.info("PDMP returned {} MedicationRequest/Orders".format(
+        len(response.json().get("entry", []))), extra=extra)
     return response.json()
 
 

@@ -153,10 +153,20 @@ def authorize():
     # todo: define fetch_token function that requests JSON (Accept: application/json header)
     # https://github.com/lepture/authlib/blob/master/authlib/oauth2/client.py#L154
     token_response = oauth.sof.authorize_access_token(_format='json')
-    user = extract_payload(token_response.get('id_token')).get('profile', '')
     extra = {}
-    if user:
-        extra['user'] = user
+    extracted_id_token = extract_payload(token_response.get('id_token'))
+    username = extracted_id_token.get('preferred_username')
+    DEA = extracted_id_token.get('DEA')
+
+    # standalone uses profile
+    if 'profile' in extracted_id_token:
+        extra['user'] = extracted_id_token['profile']
+    else:
+        extra['user'] = {'username': username, 'DEA': DEA}
+
+    # retain extracted user details in session, as needed elsewhere
+    session['user'] = extra['user']
+
     if 'patient' in token_response:
         extra['subject'] = 'Patient/{}'.format(token_response['patient'])
     current_app.logger.info("login", extra=extra)
