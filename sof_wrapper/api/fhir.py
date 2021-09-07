@@ -1,8 +1,9 @@
 import pickle
 import requests
 
-from flask import Blueprint, abort, current_app, request, session, g
+from flask import Blueprint, current_app, request, session, g
 
+from sof_wrapper.jsonify_abort import jsonify_abort
 from sof_wrapper.rxnav import add_drug_classes
 
 blueprint = Blueprint('fhir', __name__)
@@ -241,11 +242,11 @@ def route_fhir(relative_path, session_id):
     # prefer patient ID baked into access token JWT by EHR; fallback to initial transparent launch token for fEMR
     patient_id = session_data.get('token_response', {}).get('patient') or session_data.get('launch_token_patient')
     if not patient_id:
-        abort(400, "no patient ID found in session; can't continue")
+        jsonify_abort(status_code=400, message="no patient ID found in session; can't continue")
 
     iss = session_data.get('iss')
     if not iss:
-        abort(400, "no iss found in session; can't continue")
+        jsonify_abort(status_code=400, message="no iss found in session; can't continue")
 
     paths = relative_path.split('/')
     resource_name = paths.pop()
