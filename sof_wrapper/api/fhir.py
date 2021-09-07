@@ -86,7 +86,7 @@ def pdmp_med_requests(**kwargs):
     pdmp_url = '{base_url}/v/r4/fhir/MedicationOrder'.format(
         base_url=current_app.config['PDMP_URL'],
     )
-    params = kwargs or request.args
+    params = kwargs or dict(request.args)
     user = session.get('user') or get_redis_session_data(g.session_id).get('user')
     if not user or 'DEA' not in user:
         jsonify_abort(status_code=400, message=f"DEA not found")
