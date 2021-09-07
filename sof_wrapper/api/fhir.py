@@ -89,7 +89,7 @@ def pdmp_med_requests(**kwargs):
     params = kwargs or dict(request.args)
     user = session.get('user') or get_redis_session_data(g.session_id).get('user')
     if not user or 'DEA' not in user:
-        jsonify_abort(status_code=400, message=f"DEA not found")
+        jsonify_abort(status_code=400, message="DEA not found")
     params['DEA'] = user['DEA']
     return pdmp_meds(pdmp_url, params)
 
