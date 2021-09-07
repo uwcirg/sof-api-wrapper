@@ -134,6 +134,9 @@ def test_pdmp_med_request(client, requests_mock, pdmp_med_request_bundle):
     client.application.config['PDMP_URL'] = pdmp_url
     pdmp_api = f"{pdmp_url}/v/r4/fhir/MedicationOrder"
 
+    with client.session_transaction() as session:
+        session['user'] = {"username": "unittest", "DEA": "ABC123"}
+
     # mock PDMP MedicationRequest
     requests_mock.get(pdmp_api, json=pdmp_med_request_bundle)
 
