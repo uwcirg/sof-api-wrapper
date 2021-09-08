@@ -4,6 +4,8 @@ import logging
 import os
 import uuid
 
+from ..audit import audit_entry
+
 base_blueprint = Blueprint('base', __name__)
 
 
@@ -76,9 +78,7 @@ def auditlog_addevent():
         return jsonify(message="missing required 'message' in post"), 400
 
     extra = {k: v for k, v in body.items()}
-
-    log_level_method = getattr(current_app.logger, level.lower())
-    log_level_method(body, extra=extra)
+    audit_entry(message, level, extra)
     return jsonify(message='ok')
 
 
