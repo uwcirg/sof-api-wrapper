@@ -1,5 +1,5 @@
 import pickle
-from flask import g, current_app, session
+from flask import g, current_app, request, session
 
 
 def get_session_value(key, default=None):
@@ -21,12 +21,11 @@ def get_session_value(key, default=None):
 
 
 def set_session_value(key, value):
-    if 'session_id' not in g:
+    if request.cookies.get("session"):
         session[key] = value
         return
 
-    session_data = get_redis_session_data(g.session_id)
-    session_data[key] = value
+    raise NotImplementedError("Can't set session variables w/o session cookie")
 
 
 def get_redis_session_data(session_id):
@@ -41,6 +40,7 @@ def get_redis_session_data(session_id):
     encoded_session_data = redis_handle.get(f'{session_prefix}{session_id}')
 
     # why doesn't this use the flask default JSON serializer?
+    # (probably because the session is designed to hold non JSON serializable objects, like datetime)
     session_data = pickle.loads(encoded_session_data)
     return session_data
 
