@@ -15,9 +15,10 @@ def audit_entry(message, level='info', extra=None):
 
     if extra is None:
         extra = {}
-    extra['user'] = get_session_value('user')
-    subject = get_session_value('subject')
-    if subject:
-        extra['subject'] = subject
+
+    for x in ('user', 'subject'):
+        value = get_session_value(x)
+        if value:
+            extra[x] = value
 
     log_at_level(message, extra=extra)
