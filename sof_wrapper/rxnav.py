@@ -3,6 +3,7 @@ import json
 import timeit
 import os
 
+from sof_wrapper.audit import audit_entry
 from sof_wrapper.extensions import CS_Singleton
 
 
@@ -14,6 +15,8 @@ def add_drug_classes(med, rxnav_url):
             break
     else:
         # exit early if no RxNorm code found
+        med_text = med["medicationCodeableConcept"]["text"]
+        audit_entry(f"no RxNorm code found for: {med_text}")
         return med
 
     rxcui = med_code["code"]
