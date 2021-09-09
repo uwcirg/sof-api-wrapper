@@ -76,15 +76,14 @@ def launch():
         # the SMIT Sandbox (and Cosri SoF host) use a base64 encoded JSON object
         payload = extract_payload(format_as_jwt(launch))
 
-        extra_log_params = {}
         launch_token_patient = payload.get(LAUNCH_VALUE_TO_CODE['patient'])
         if launch_token_patient:
-            extra_log_params['subject'] = f"Patient/{launch_token_patient}"
+            session['subject'] = f"Patient/{launch_token_patient}"
 
         launch_token_provider = payload.get(LAUNCH_VALUE_TO_CODE['provider'])
         if launch_token_provider:
-            extra_log_params['user'] = f"Provider/{launch_token_provider}"
-        audit_entry("launch", extra=extra_log_params)
+            session['user'] = f"Provider/{launch_token_provider}"
+        audit_entry("launch", extra={'tags':['launch']})
         session['launch_token_patient'] = launch_token_patient
 
     # fetch conformance statement from /metadata
