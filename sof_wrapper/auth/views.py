@@ -167,9 +167,6 @@ def authorize():
     if 'patient' in token_response:
         session['subject'] = 'Patient/{}'.format(token_response['patient'])
 
-    audit_entry("login")
-
-
     iss = session['iss']
     current_app.logger.debug('iss from session: %s', iss)
 
