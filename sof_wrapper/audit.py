@@ -1,6 +1,6 @@
 """Audit
 
-funtions to simplify adding context and extra data to log messages destined for audit logs
+functions to simplify adding context and extra data to log messages destined for audit logs
 """
 from flask import current_app
 from sof_wrapper.wrapped_session import get_session_value
