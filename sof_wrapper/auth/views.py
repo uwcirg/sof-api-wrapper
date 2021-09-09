@@ -1,8 +1,9 @@
 from flask import Blueprint, current_app, redirect, request, url_for, session
 import requests
 
-from sof_wrapper.extensions import oauth
+from sof_wrapper.audit import audit_entry
 from sof_wrapper.auth.helpers import extract_payload, format_as_jwt
+from sof_wrapper.extensions import oauth
 
 
 # SMIT launch token encoding scheme
@@ -83,7 +84,7 @@ def launch():
         launch_token_provider = payload.get(LAUNCH_VALUE_TO_CODE['provider'])
         if launch_token_provider:
             extra_log_params['user'] = f"Provider/{launch_token_provider}"
-        current_app.logger.info("launch", extra=extra_log_params)
+        audit_entry("launch", extra=extra_log_params)
         session['launch_token_patient'] = launch_token_patient
 
     # fetch conformance statement from /metadata
@@ -153,23 +154,20 @@ def authorize():
     # todo: define fetch_token function that requests JSON (Accept: application/json header)
     # https://github.com/lepture/authlib/blob/master/authlib/oauth2/client.py#L154
     token_response = oauth.sof.authorize_access_token(_format='json')
-    extra = {}
     extracted_id_token = extract_payload(token_response.get('id_token'))
     username = extracted_id_token.get('preferred_username')
     DEA = extracted_id_token.get('DEA')
 
     # standalone uses profile
     if 'profile' in extracted_id_token:
-        extra['user'] = extracted_id_token['profile']
+        session['user'] = extracted_id_token['profile']
     else:
-        extra['user'] = {'username': username, 'DEA': DEA}
-
-    # retain extracted user details in session, as needed elsewhere
-    session['user'] = extra['user']
+        session['user'] = {'username': username, 'DEA': DEA}
 
     if 'patient' in token_response:
-        extra['subject'] = 'Patient/{}'.format(token_response['patient'])
-    current_app.logger.info("login", extra=extra)
+        session['subject'] = 'Patient/{}'.format(token_response['patient'])
+
+    audit_entry("login")
 
 
     iss = session['iss']
@@ -179,7 +177,7 @@ def authorize():
 
     frontend_url = current_app.config['LAUNCH_DEST']
 
-    current_app.logger.info('redirecting to frontend app: %s', frontend_url)
+    current_app.logger.debug('redirecting to frontend app: %s', frontend_url)
     return redirect(frontend_url)
 
 
