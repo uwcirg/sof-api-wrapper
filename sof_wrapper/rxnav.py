@@ -10,13 +10,15 @@ from sof_wrapper.extensions import CS_Singleton
 def add_drug_classes(med, rxnav_url):
     """Add Drug Classes"""
 
+    meds = []
     for med_code in med["medicationCodeableConcept"]["coding"]:
+        meds.append(f"{med_code['system']}|{med_code['code']}")
         if med_code["system"] == "http://www.nlm.nih.gov/research/umls/rxnorm":
             break
     else:
         # exit early if no RxNorm code found
         med_text = med["medicationCodeableConcept"]["text"]
-        audit_entry(f"no RxNorm code found for: {med_text}")
+        audit_entry(f"RxNorm code unavailable: '{med_text}' ({meds})")
         return med
 
     rxcui = med_code["code"]
