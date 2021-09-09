@@ -3,7 +3,7 @@ import json
 import timeit
 import os
 
-from .extensions import CS_Singleton
+from sof_wrapper.extensions import CS_Singleton
 
 
 def add_drug_classes(med, rxnav_url):

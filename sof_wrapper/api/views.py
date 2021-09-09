@@ -4,7 +4,7 @@ import logging
 import os
 import uuid
 
-from ..audit import audit_entry
+from sof_wrapper.audit import audit_entry
 
 base_blueprint = Blueprint('base', __name__)
 
