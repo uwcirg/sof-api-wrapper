@@ -54,10 +54,6 @@ def emr_med_orders(patient_id):
 
 
 def emr_meds(emr_url, params, headers):
-    # TODO: enhance for audit or remove PHI?
-    current_app.logger.debug(
-        f"fire request for emr meds on {emr_url}/?{params}")
-
     upstream_headers = {}
     if 'Authorization' in headers:
         upstream_headers = {'Authorization': headers['Authorization']}
@@ -130,7 +126,6 @@ def pdmp_meds(pdmp_url, params):
             'subject:Patient.birthdate': 'eq1945-01-15'
         }
 
-    audit_entry(f"fire request for PDMP meds on {pdmp_url}/?{params}")
     response = requests.get(pdmp_url, params=params)
     response.raise_for_status()
     audit_entry("PDMP returned {} MedicationRequest/Orders".format(
