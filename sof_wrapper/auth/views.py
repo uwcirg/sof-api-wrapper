@@ -159,12 +159,12 @@ def authorize():
 
     # standalone uses profile
     if 'profile' in extracted_id_token:
-        session['user'] = extracted_id_token['profile']
+        session['user'] = session.get('user', extracted_id_token['profile'])
     else:
-        session['user'] = {'username': username, 'DEA': DEA}
+        session['user'] = session.get('user', {'username': username, 'DEA': DEA})
 
     if 'patient' in token_response:
-        session['subject'] = 'Patient/{}'.format(token_response['patient'])
+        session['subject'] = session.get('subject', 'Patient/{}'.format(token_response['patient']))
 
     iss = session['iss']
     current_app.logger.debug('iss from session: %s', iss)
