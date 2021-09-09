@@ -3,17 +3,23 @@ import json
 import timeit
 import os
 
-from .extensions import CS_Singleton
+from sof_wrapper.audit import audit_entry
+from sof_wrapper.extensions import CS_Singleton
 
 
 def add_drug_classes(med, rxnav_url):
     """Add Drug Classes"""
 
+    meds = []
+    med_text = med["medicationCodeableConcept"]["text"]
+
     for med_code in med["medicationCodeableConcept"]["coding"]:
+        meds.append(f"{med_code['system']}|{med_code['code']}")
         if med_code["system"] == "http://www.nlm.nih.gov/research/umls/rxnorm":
             break
     else:
         # exit early if no RxNorm code found
+        audit_entry(f"RxNorm code unavailable: '{med_text}' ({meds})", level='warn')
         return med
 
     rxcui = med_code["code"]
@@ -24,6 +30,9 @@ def add_drug_classes(med, rxnav_url):
         drug_class_map[drug_class]
         for drug_class in drug_class_filter(rxnav_response) if drug_class in drug_class_map
     )
+
+    if not drug_classes:
+        audit_entry(f"drug class unavailable: {med_text} ({meds})", level='warn')
 
     annotated_med = med.copy()
     med_cc_extensions = annotated_med["medicationCodeableConcept"].get("extension", [])

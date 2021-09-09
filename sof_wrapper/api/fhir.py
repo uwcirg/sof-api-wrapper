@@ -1,10 +1,11 @@
-import pickle
 import requests
 
-from flask import Blueprint, current_app, request, session, g
+from flask import Blueprint, current_app, g, request
 
+from sof_wrapper.audit import audit_entry
 from sof_wrapper.jsonify_abort import jsonify_abort
 from sof_wrapper.rxnav import add_drug_classes
+from sof_wrapper.wrapped_session import get_session_value, set_session_value
 
 blueprint = Blueprint('fhir', __name__)
 r2prefix = '/v/r2/fhir'
@@ -36,7 +37,7 @@ def annotate_meds(med_bundle):
 @blueprint.route(f'{r4prefix}/emr/MedicationRequest', defaults={'patient_id': None})
 @blueprint.route(f'{r4prefix}/emr/MedicationRequest/<string:patient_id>')
 def emr_med_requests(patient_id):
-    base_url = session.get('iss') or get_redis_session_data(g.session_id).get('iss')
+    base_url = get_session_value('iss')
     emr_url = f'{base_url}/MedicationRequest'
     params = {"subject": f"Patient/{patient_id}"} if patient_id else {}
     return emr_meds(emr_url, params, request.headers)
@@ -45,7 +46,7 @@ def emr_med_requests(patient_id):
 @blueprint.route(f'{r2prefix}/emr/MedicationOrder', defaults={'patient_id': None})
 @blueprint.route(f'{r2prefix}/emr/MedicationOrder/<string:patient_id>')
 def emr_med_orders(patient_id):
-    base_url = session.get('iss') or get_redis_session_data(g.session_id).get('iss')
+    base_url = get_session_value('iss')
     emr_url = f'{base_url}/MedicationOrder'
     params = {"patient": f"Patient/{patient_id}"} if patient_id else {}
 
@@ -53,10 +54,6 @@ def emr_med_orders(patient_id):
 
 
 def emr_meds(emr_url, params, headers):
-    # TODO: enhance for audit or remove PHI?
-    current_app.logger.debug(
-        f"fire request for emr meds on {emr_url}/?{params}")
-
     upstream_headers = {}
     if 'Authorization' in headers:
         upstream_headers = {'Authorization': headers['Authorization']}
@@ -87,7 +84,7 @@ def pdmp_med_requests(**kwargs):
         base_url=current_app.config['PDMP_URL'],
     )
     params = kwargs or dict(request.args)
-    user = session.get('user') or get_redis_session_data(g.session_id).get('user')
+    user = get_session_value('user')
     if not user or 'DEA' not in user:
         jsonify_abort(status_code=400, message="DEA not found")
     params['DEA'] = user['DEA']
@@ -109,7 +106,7 @@ def pdmp_med_orders(**kwargs):
         base_url=current_app.config['PDMP_URL'],
         )
     params = kwargs or request.args
-    user = session.get('user') or get_redis_session_data(g.session_id).get('user')
+    user = get_session_value('user')
     if not user or 'DEA' not in user:
         jsonify_abort(status_code=400, message="DEA not found")
     params['DEA'] = user['DEA']
@@ -129,12 +126,10 @@ def pdmp_meds(pdmp_url, params):
             'subject:Patient.birthdate': 'eq1945-01-15'
         }
 
-    extra = {'user': session.get('user') or get_redis_session_data(g.session_id).get('user')}
-    current_app.logger.info(f"fire request for PDMP meds on {pdmp_url}/?{params}", extra=extra)
     response = requests.get(pdmp_url, params=params)
     response.raise_for_status()
-    current_app.logger.info("PDMP returned {} MedicationRequest/Orders".format(
-        len(response.json().get("entry", []))), extra=extra)
+    audit_entry("PDMP returned {} MedicationRequest/Orders".format(
+        len(response.json().get("entry", []))))
     return response.json()
 
 
@@ -199,13 +194,13 @@ def observations():
 
 @blueprint.route(f'{r4prefix}/Patient/<string:id>')
 def patient_by_id(id):
-    base_url = session.get('iss') or get_redis_session_data(g.session_id).get('iss')
+    base_url = get_session_value('iss')
     key = f'patient_{id}'
-    if key in session:
-        return session[key]
+    value = get_session_value(key)
+    if value:
+        return value
 
     patient_url = f'{base_url}/Patient/{id}'
-
 
     upstream_headers = {}
     if 'Authorization' in request.headers:
@@ -217,25 +212,9 @@ def patient_by_id(id):
     )
     response.raise_for_status()
     patient_fhir = response.json()
-    session[key] = patient_fhir
+    # TODO when possible w/o session cookie: set_session_value(key, patient_fhir)
 
     return patient_fhir
-
-
-def get_redis_session_data(session_id):
-    """Load session data associated with given session_id"""
-    if session_id is None:
-        return {}
-
-    # TODO: further investigate using SessionHandler
-    redis_handle = current_app.config['SESSION_REDIS']
-    session_prefix = current_app.config.get('SESSION_KEY_PREFIX', 'session:')
-
-    encoded_session_data = redis_handle.get(f'{session_prefix}{session_id}')
-
-    # why doesn't this use the flask default JSON serializer?
-    session_data = pickle.loads(encoded_session_data)
-    return session_data
 
 
 @blueprint.route('/fhir-router/', defaults={'relative_path': '', 'session_id': None})
@@ -244,13 +223,12 @@ def route_fhir(relative_path, session_id):
     g.session_id = session_id
     current_app.logger.debug('received session_id as path parameter: %s', session_id)
 
-    session_data = get_redis_session_data(session_id)
     # prefer patient ID baked into access token JWT by EHR; fallback to initial transparent launch token for fEMR
-    patient_id = session_data.get('token_response', {}).get('patient') or session_data.get('launch_token_patient')
+    patient_id = get_session_value('token_response', {}).get('patient') or get_session_value('launch_token_patient')
     if not patient_id:
         jsonify_abort(status_code=400, message="no patient ID found in session; can't continue")
 
-    iss = session_data.get('iss')
+    iss = get_session_value('iss')
     if not iss:
         jsonify_abort(status_code=400, message="no iss found in session; can't continue")
 
