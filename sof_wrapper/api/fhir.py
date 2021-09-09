@@ -217,7 +217,7 @@ def patient_by_id(id):
     )
     response.raise_for_status()
     patient_fhir = response.json()
-    set_session_value(key, patient_fhir)
+    # TODO when possible w/o session cookie: set_session_value(key, patient_fhir)
 
     return patient_fhir
 
