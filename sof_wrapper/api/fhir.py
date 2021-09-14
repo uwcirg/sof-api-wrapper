@@ -86,7 +86,7 @@ def pdmp_med_requests(**kwargs):
     params = kwargs or dict(request.args)
     user = get_session_value('user')
     if not user or 'DEA' not in user:
-        jsonify_abort(status_code=400, message="DEA not found")
+        return jsonify_abort(status_code=400, message="DEA not found")
     params['DEA'] = user['DEA']
     return pdmp_meds(pdmp_url, params)
 
@@ -108,7 +108,7 @@ def pdmp_med_orders(**kwargs):
     params = kwargs or request.args
     user = get_session_value('user')
     if not user or 'DEA' not in user:
-        jsonify_abort(status_code=400, message="DEA not found")
+        return jsonify_abort(status_code=400, message="DEA not found")
     params['DEA'] = user['DEA']
     return pdmp_meds(pdmp_url, params)
 
@@ -226,11 +226,11 @@ def route_fhir(relative_path, session_id):
     # prefer patient ID baked into access token JWT by EHR; fallback to initial transparent launch token for fEMR
     patient_id = get_session_value('token_response', {}).get('patient') or get_session_value('launch_token_patient')
     if not patient_id:
-        jsonify_abort(status_code=400, message="no patient ID found in session; can't continue")
+        return jsonify_abort(status_code=400, message="no patient ID found in session; can't continue")
 
     iss = get_session_value('iss')
     if not iss:
-        jsonify_abort(status_code=400, message="no iss found in session; can't continue")
+        return jsonify_abort(status_code=400, message="no iss found in session; can't continue")
 
     paths = relative_path.split('/')
     resource_name = paths.pop()
