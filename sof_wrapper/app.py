@@ -29,6 +29,7 @@ def create_app(testing=False, cli=False):
 
 def configure_logging(app):
     app.logger  # must call to initialize prior to config or it'll replace
+    app.logger.setLevel(getattr(logging, app.config['LOG_LEVEL'].upper()))
 
     config = 'logging.ini'
     if not os.path.exists(config):

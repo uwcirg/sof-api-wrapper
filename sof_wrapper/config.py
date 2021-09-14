@@ -27,6 +27,9 @@ SOF_AUTHORIZE_URL = os.getenv("SOF_AUTHORIZE_URL")
 LOGSERVER_TOKEN = os.getenv('LOGSERVER_TOKEN')
 LOGSERVER_URL = os.getenv('LOGSERVER_URL')
 
+# NB log level hardcoded at INFO for logserver
+LOG_LEVEL = os.environ.get('LOG_LEVEL', 'DEBUG').upper()
+
 LAUNCH_DEST = os.getenv("LAUNCH_DEST")
 
 PDMP_URL = os.getenv("PDMP_URL")
