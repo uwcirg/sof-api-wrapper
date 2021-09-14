@@ -36,6 +36,7 @@ def configure_logging(app):
         config = os.path.join('..', config)
 
     logging_config.fileConfig(config, disable_existing_loggers=False)
+    app.logger.setLevel(getattr(logging, app.config['LOG_LEVEL'].upper()))
 
     if not app.config['LOGSERVER_URL']:
         return
