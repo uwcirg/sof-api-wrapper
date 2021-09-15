@@ -21,7 +21,8 @@ def add_drug_classes(med, rxnav_url):
         # exit early if no RxNorm code found
         audit_entry(
             f"RxNorm code unavailable: '{med_text}' ({meds})",
-            extra={'tags': ['RxNorm', 'rxnorm-code-lookup-failed']})
+            extra={'tags': ['RxNorm', 'rxnorm-code-lookup-failed']},
+            level='warn')
         return med
 
     rxcui = med_code["code"]
@@ -36,7 +37,8 @@ def add_drug_classes(med, rxnav_url):
     if not drug_classes:
         audit_entry(
             f"drug class unavailable: {med_text} ({meds})",
-            extra={'tags': ['RxNorm', 'rxnorm-drug-class-not-found']})
+            extra={'tags': ['RxNorm', 'rxnorm-drug-class-not-found']},
+            level='warn')
 
     annotated_med = med.copy()
     med_cc_extensions = annotated_med["medicationCodeableConcept"].get("extension", [])
