@@ -2,7 +2,6 @@ from flask import Flask
 from flask_cors import CORS
 import logging
 from logging import config as logging_config
-from pythonjsonlogger.jsonlogger import JsonFormatter
 import os
 from werkzeug.middleware.proxy_fix import ProxyFix
 
@@ -42,21 +41,18 @@ def configure_logging(app):
         return
 
     log_server_handler = LogServerHandler(
-        level=logging.INFO,
         jwt=app.config['LOGSERVER_TOKEN'],
         url=app.config['LOGSERVER_URL'])
+    event_logger = logging.getLogger("event_logger")
+    event_logger.setLevel(logging.INFO)
+    event_logger.addHandler(log_server_handler)
 
-    json_formatter = JsonFormatter(
-        "%(asctime)s %(name)s %(levelname)s %(message)s")
-    log_server_handler.setFormatter(json_formatter)
-
-    # Hardcode event/audit logs to INFO - no debugging clutter desired
-    log_server_handler.setLevel(logging.INFO)
-
-    app.logger.addHandler(log_server_handler)
     app.logger.debug(
         "cosri confidential backend logging initialized",
-        extra={'bonus': 'data', 'tags': ['testing', 'logging']})
+        extra={'tags': ['testing', 'logging', 'app']})
+    event_logger.info(
+        "cosri confidential backend logging initialized",
+        extra={'tags': ['testing', 'logging', 'events']})
 
 
 def configure_extensions(app, cli):
