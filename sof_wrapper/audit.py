@@ -2,6 +2,7 @@
 
 functions to simplify adding context and extra data to log messages destined for audit logs
 """
+from flask import has_app_context
 import logging
 
 from sof_wrapper.logserverhandler import LogServerHandler
@@ -30,9 +31,10 @@ def audit_entry(message, level='info', extra=None):
     if extra is None:
         extra = {}
 
-    for x in ('user', 'subject'):
-        value = get_session_value(x)
-        if value:
-            extra[x] = value
+    if has_app_context():
+        for x in ('user', 'subject'):
+            value = get_session_value(x)
+            if value:
+                extra[x] = value
 
     log_at_level(message, extra=extra)
