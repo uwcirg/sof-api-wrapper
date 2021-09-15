@@ -2,13 +2,12 @@ from flask import Flask
 from flask_cors import CORS
 import logging
 from logging import config as logging_config
-from pythonjsonlogger.jsonlogger import JsonFormatter
 import os
 from werkzeug.middleware.proxy_fix import ProxyFix
 
 from sof_wrapper import auth, api
+from sof_wrapper.audit import audit_entry, audit_log_init
 from sof_wrapper.extensions import oauth, sess
-from sof_wrapper.logserverhandler import LogServerHandler
 
 
 def create_app(testing=False, cli=False):
@@ -37,26 +36,17 @@ def configure_logging(app):
 
     logging_config.fileConfig(config, disable_existing_loggers=False)
     app.logger.setLevel(getattr(logging, app.config['LOG_LEVEL'].upper()))
+    app.logger.debug(
+        "cosri confidential backend logging initialized",
+        extra={'tags': ['testing', 'logging', 'app']})
 
     if not app.config['LOGSERVER_URL']:
         return
 
-    log_server_handler = LogServerHandler(
-        level=logging.INFO,
-        jwt=app.config['LOGSERVER_TOKEN'],
-        url=app.config['LOGSERVER_URL'])
-
-    json_formatter = JsonFormatter(
-        "%(asctime)s %(name)s %(levelname)s %(message)s")
-    log_server_handler.setFormatter(json_formatter)
-
-    # Hardcode event/audit logs to INFO - no debugging clutter desired
-    log_server_handler.setLevel(logging.INFO)
-
-    app.logger.addHandler(log_server_handler)
-    app.logger.debug(
+    audit_log_init(app)
+    audit_entry(
         "cosri confidential backend logging initialized",
-        extra={'bonus': 'data', 'tags': ['testing', 'logging']})
+        extra={'tags': ['testing', 'logging', 'events']})
 
 
 def configure_extensions(app, cli):

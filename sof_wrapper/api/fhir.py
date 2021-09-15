@@ -5,7 +5,7 @@ from flask import Blueprint, current_app, g, request
 from sof_wrapper.audit import audit_entry
 from sof_wrapper.jsonify_abort import jsonify_abort
 from sof_wrapper.rxnav import add_drug_classes
-from sof_wrapper.wrapped_session import get_session_value, set_session_value
+from sof_wrapper.wrapped_session import get_session_value
 
 blueprint = Blueprint('fhir', __name__)
 r2prefix = '/v/r2/fhir'
@@ -114,22 +114,11 @@ def pdmp_med_orders(**kwargs):
 
 
 def pdmp_meds(pdmp_url, params):
-    # TODO: remove hack to generate fake records for Brenda from Darth
-    if (
-            params.get('subject:Patient.name.family') == 'Jackson' and
-            params.get('subject:Patient.name.given') == 'Brenda' and
-            params.get('subject:Patient.birthdate') == 'eq1956-10-14'):
-        # avoid type errors on request.args by replacing
-        params = {
-            'subject:Patient.name.family': 'Vader',
-            'subject:Patient.name.given': 'Darth',
-            'subject:Patient.birthdate': 'eq1945-01-15'
-        }
-
     response = requests.get(pdmp_url, params=params)
     response.raise_for_status()
     audit_entry("PDMP returned {} MedicationRequest/Orders".format(
-        len(response.json().get("entry", []))))
+        len(response.json().get("entry", []))),
+        extra={'tags': ['PDMP', 'MedicationRequest'], 'meds': [e for e in response.json().get("entry", [])]})
     return response.json()
 
 
@@ -151,6 +140,7 @@ def medication_request(patient_id=None):
         pdmp_med_requests(**pdmp_args),
         emr_med_requests(patient_id),
     ))
+
 
 @blueprint.route(f'{r2prefix}/MedicationOrder/<string:patient_id>')
 @blueprint.route(f'{r2prefix}/MedicationOrder', defaults={'patient_id': None})
