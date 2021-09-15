@@ -2,14 +2,15 @@
 
 functions to simplify adding context and extra data to log messages destined for audit logs
 """
-from flask import current_app
+import logging
 from sof_wrapper.wrapped_session import get_session_value
 
 
 def audit_entry(message, level='info', extra=None):
     """Log entry, adding in session info such as active user"""
+    logger = logging.getLogger("event_logger")
     try:
-        log_at_level = getattr(current_app.logger, level.lower())
+        log_at_level = getattr(logger, level.lower())
     except AttributeError:
         raise ValueError(f"audit_entry given bogus level: {level}")
 
