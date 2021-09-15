@@ -117,7 +117,8 @@ def pdmp_meds(pdmp_url, params):
     response = requests.get(pdmp_url, params=params)
     response.raise_for_status()
     audit_entry("PDMP returned {} MedicationRequest/Orders".format(
-        len(response.json().get("entry", []))), extra={'tags': [e for e in response.json().get("entry", [])]})
+        len(response.json().get("entry", []))),
+        extra={'tags': ['PDMP', 'MedicationRequest'], 'meds': [e for e in response.json().get("entry", [])]})
     return response.json()
 
 
