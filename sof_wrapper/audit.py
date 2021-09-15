@@ -3,14 +3,26 @@
 functions to simplify adding context and extra data to log messages destined for audit logs
 """
 import logging
+
+from sof_wrapper.logserverhandler import LogServerHandler
 from sof_wrapper.wrapped_session import get_session_value
+
+EVENT_LOGGER = logging.getlogger("confidential_backend_event_logger")
+
+
+def audit_log_init(app):
+    log_server_handler = LogServerHandler(
+        jwt=app.config['LOGSERVER_TOKEN'],
+        url=app.config['LOGSERVER_URL'])
+    event_logger = logging.getLogger("event_logger")
+    event_logger.setLevel(logging.INFO)
+    event_logger.addHandler(log_server_handler)
 
 
 def audit_entry(message, level='info', extra=None):
     """Log entry, adding in session info such as active user"""
-    logger = logging.getLogger("event_logger")
     try:
-        log_at_level = getattr(logger, level.lower())
+        log_at_level = getattr(EVENT_LOGGER, level.lower())
     except AttributeError:
         raise ValueError(f"audit_entry given bogus level: {level}")
 

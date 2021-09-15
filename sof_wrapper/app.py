@@ -6,8 +6,8 @@ import os
 from werkzeug.middleware.proxy_fix import ProxyFix
 
 from sof_wrapper import auth, api
+from sof_wrapper.audit import audit_entry, audit_log_init
 from sof_wrapper.extensions import oauth, sess
-from sof_wrapper.logserverhandler import LogServerHandler
 
 
 def create_app(testing=False, cli=False):
@@ -36,21 +36,15 @@ def configure_logging(app):
 
     logging_config.fileConfig(config, disable_existing_loggers=False)
     app.logger.setLevel(getattr(logging, app.config['LOG_LEVEL'].upper()))
+    app.logger.debug(
+        "cosri confidential backend logging initialized",
+        extra={'tags': ['testing', 'logging', 'app']})
 
     if not app.config['LOGSERVER_URL']:
         return
 
-    log_server_handler = LogServerHandler(
-        jwt=app.config['LOGSERVER_TOKEN'],
-        url=app.config['LOGSERVER_URL'])
-    event_logger = logging.getLogger("event_logger")
-    event_logger.setLevel(logging.INFO)
-    event_logger.addHandler(log_server_handler)
-
-    app.logger.debug(
-        "cosri confidential backend logging initialized",
-        extra={'tags': ['testing', 'logging', 'app']})
-    event_logger.info(
+    audit_log_init(app)
+    audit_entry(
         "cosri confidential backend logging initialized",
         extra={'tags': ['testing', 'logging', 'events']})
 
