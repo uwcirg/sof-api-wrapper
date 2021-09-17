@@ -35,10 +35,14 @@ def add_drug_classes(med, rxnav_url):
     )
 
     if not drug_classes:
+
+        msg = f"drug class unavailable: {med_text} ({meds})"
         audit_entry(
-            f"drug class unavailable: {med_text} ({meds})",
+            msg,
             extra={'tags': ['RxNorm', 'rxnorm-drug-class-not-found']},
             level='warn')
+        # submit error for ELK alerts as this should get attention
+        current_app.logger.error(msg)
 
     annotated_med = med.copy()
     med_cc_extensions = annotated_med["medicationCodeableConcept"].get("extension", [])
