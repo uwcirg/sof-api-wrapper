@@ -15,7 +15,7 @@ jobs:
           fetch-depth: 0
 
       - name: Set environment variable for version from git output
-        uses: echo "VERSION_STRING=$(git describe --always --tags)" >> $GITHUB_ENV
+        run: echo "VERSION_STRING=$(git describe --always --tags)" >> $GITHUB_ENV
 
       - name: Publish to Dockerhub registry
         # todo: pin to hash
