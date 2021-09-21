@@ -2,6 +2,7 @@
 
 functions to simplify adding context and extra data to log messages destined for audit logs
 """
+from copy import deepcopy
 from flask import current_app, has_app_context
 import logging
 
@@ -38,5 +39,14 @@ def audit_entry(message, level='info', extra=None):
                 extra[x] = value
         if 'version' not in extra:
             extra['version'] = current_app.config['VERSION_STRING']
+
+        # echo ERRORs to current_app.logger for alerts
+        if level.lower() == 'error':
+            # remove obvious PHI
+            scrubbed_extra = deepcopy(extra)
+            for x in ('user', 'subject', 'patient'):
+                if x in scrubbed_extra:
+                    scrubbed_extra[x] = 'REDACTED - see audit logs'
+            current_app.logger.error(message, extra=scrubbed_extra)
 
     log_at_level(message, extra=extra)
