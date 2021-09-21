@@ -46,7 +46,8 @@ def configure_logging(app):
     audit_log_init(app)
     audit_entry(
         "cosri confidential backend logging initialized",
-        extra={'tags': ['testing', 'logging', 'events']})
+        extra={'tags': ['testing', 'logging', 'events'],
+            'version': app.config['VERSION_STRING']})
 
 
 def configure_extensions(app, cli):
