@@ -6,28 +6,31 @@
 #
 authlib==0.14.3           # via sof_wrapper (setup.py)
 cachelib==0.1.1           # via flask-session
-certifi==2020.6.20        # via requests
+certifi==2021.5.30        # via requests
 cffi==1.14.1              # via cryptography
-chardet==3.0.4            # via requests
-click==7.1.2              # via flask
-cryptography==3.0         # via authlib, python-jose
+charset-normalizer==2.0.6  # via requests
+click==8.0.1              # via flask
+cryptography==3.3.2         # via authlib, python-jose
 ecdsa==0.14.1             # via python-jose
 flask-cors==3.0.10        # via sof_wrapper (setup.py)
 flask-session==0.3.2      # via sof_wrapper (setup.py)
 flask==1.1.2              # via flask-session, sof_wrapper (setup.py)
-idna==2.10                # via requests
-itsdangerous==1.1.0       # via flask
-jinja2==2.11.2            # via flask
-markupsafe==1.1.1         # via jinja2
+idna==3.2                 # via requests
+importlib-metadata==4.8.1  # via click
+itsdangerous==2.0.1       # via flask
+jinja2==3.0.1             # via flask
+markupsafe==2.0.1         # via jinja2
 pyasn1==0.4.8             # via python-jose, rsa
 pycparser==2.20           # via cffi
 python-jose[cryptography]==3.2.0  # via sof_wrapper (setup.py)
 python-json-logger==0.1.11  # via sof_wrapper (setup.py)
 redis==3.5.3              # via sof_wrapper (setup.py)
 requests-cache==0.6.4     # via sof_wrapper (setup.py)
-requests==2.25.1          # via sof_wrapper (setup.py)
-rsa==4.6                  # via python-jose
-six==1.16.0               # via cryptography, ecdsa, python-jose
-urllib3==1.25.10          # via requests
+requests==2.26.0          # via requests-cache, sof_wrapper (setup.py)
+rsa==4.7                  # via python-jose
+six==1.16.0               # via ecdsa, flask-cors, url-normalize
+typing-extensions==3.10.0.2  # via importlib-metadata
 url-normalize==1.4.3      # via requests-cache
-werkzeug==1.0.1           # via flask
+urllib3==1.26.7           # via requests, requests-cache
+werkzeug==2.0.1           # via flask
+zipp==3.5.0               # via importlib-metadata
