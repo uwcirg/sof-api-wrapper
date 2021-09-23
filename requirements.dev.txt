@@ -18,7 +18,6 @@ pyparsing==2.4.7          # via packaging
 pytest-mock==3.6.1        # via sof_wrapper (setup.py)
 pytest-redis==2.1.1       # via sof_wrapper (setup.py)
 pytest==6.2.5             # via pytest-mock, pytest-redis, sof_wrapper (setup.py)
-redis==3.5.3              # via pytest-redis
 requests-mock==1.9.3      # via sof_wrapper (setup.py)
 toml==0.10.2              # via pytest
 typing-extensions==3.10.0.2  # via importlib-metadata
