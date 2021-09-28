@@ -15,7 +15,7 @@ services:
       - /etc/hosts:/etc/hosts:ro
     ports:
       # allow override of published port
-      - ${P_PORT:-5000}:5000
+      - ${P_PORT:-8000}:8000
     environment:
       REQUESTS_CA_BUNDLE: /etc/ssl/certs/ca-certificates.crt
       SESSION_REDIS: redis://redis:6379/0

@@ -11,7 +11,7 @@ RUN pip install --requirement requirements.txt
 COPY . .
 
 ENV FLASK_APP=sof_wrapper.app:create_app() \
-    PORT=8008
+    PORT=8000
 
 EXPOSE "${PORT}"
 
