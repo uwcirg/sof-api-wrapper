@@ -10,9 +10,9 @@ RUN pip install --requirement requirements.txt
 
 COPY . .
 
-EXPOSE 5000
+ENV FLASK_APP=sof_wrapper.app:create_app() \
+    PORT=8000
 
-ENV FLASK_APP=sof_wrapper/app:create_app() \
-    FLASK_ENV=development
+EXPOSE "${PORT}"
 
-CMD flask run --host 0.0.0.0
+CMD gunicorn --bind "0.0.0.0:${PORT:-8000}" ${FLASK_APP}
