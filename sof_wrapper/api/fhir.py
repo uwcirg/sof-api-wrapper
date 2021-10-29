@@ -11,6 +11,7 @@ blueprint = Blueprint('fhir', __name__)
 r2prefix = '/v/r2/fhir'
 r4prefix = '/v/r4/fhir'
 
+PROXY_HEADERS = ('Authorization', 'Cache-Control')
 
 def collate_results(*result_sets):
     """Compile given result sets into a single bundle"""
@@ -55,8 +56,9 @@ def emr_med_orders(patient_id):
 
 def emr_meds(emr_url, params, headers):
     upstream_headers = {}
-    if 'Authorization' in headers:
-        upstream_headers = {'Authorization': headers['Authorization']}
+    for header_name in PROXY_HEADERS:
+        if header_name in request.headers:
+            upstream_headers[header_name] = request.headers[header_name]
 
     response = requests.get(
         url=emr_url,
@@ -193,8 +195,10 @@ def patient_by_id(id):
     patient_url = f'{base_url}/Patient/{id}'
 
     upstream_headers = {}
-    if 'Authorization' in request.headers:
-        upstream_headers = {'Authorization': request.headers['Authorization']}
+
+    for header_name in PROXY_HEADERS:
+        if header_name in request.headers:
+            upstream_headers[header_name] = request.headers[header_name]
 
     response = requests.get(
         url=patient_url,
@@ -238,8 +242,9 @@ def route_fhir(relative_path, session_id):
     upstream_fhir_base_url = iss
     upstream_fhir_url = '/'.join((upstream_fhir_base_url, relative_path))
     upstream_headers = {}
-    if 'Authorization' in request.headers:
-        upstream_headers = {'Authorization': request.headers['Authorization']}
+    for header_name in PROXY_HEADERS:
+        if header_name in request.headers:
+            upstream_headers[header_name] = request.headers[header_name]
 
     upstream_response = requests.get(
         url=upstream_fhir_url,
