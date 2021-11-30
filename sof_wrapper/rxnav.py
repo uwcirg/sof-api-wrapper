@@ -62,15 +62,15 @@ def get_drug_classes(rxcui, rxnav_url):
 
     https://rxnav.nlm.nih.gov/api-RxClass.getClassByRxNormDrugId.html
     """
-    b4 = timeit.default_timer()
+    start_time = timeit.default_timer()
     cached_session = CS_Singleton().cached_session
     response = cached_session.get(
         url=f"{rxnav_url}/REST/rxclass/class/byRxcui.json",
         params={"rxcui": rxcui},
     )
-    delta = timeit.default_timer() - b4
-    if delta > 0.01:
-        current_app.logger.debug(f"uncached rxnav {rxcui} request time: {delta}")
+    request_time = timeit.default_timer() - start_time
+    if request_time > 0.01:
+        current_app.logger.debug(f"uncached rxnav {rxcui} request time: {request_time}")
     return response.json()
 
 
