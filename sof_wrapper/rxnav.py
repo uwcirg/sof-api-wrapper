@@ -30,8 +30,8 @@ def add_drug_classes(med, rxnav_url):
     rxnav_response = get_drug_classes(rxcui, rxnav_url)
     drug_class_map = load_drug_class_map()
     cosri_drug_classes = set(
-        drug_class_map[drug_class_name]
-        for drug_class_name in drug_class_filter(rxnav_response) if drug_class_name in drug_class_map
+        drug_class_map[drug_class_id]
+        for drug_class_id in drug_class_filter(rxnav_response) if drug_class_id in drug_class_map
     )
 
     if not cosri_drug_classes:
