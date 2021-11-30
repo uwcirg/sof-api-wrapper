@@ -77,7 +77,7 @@ def get_drug_classes(rxcui, rxnav_url):
 def drug_class_filter(rxnav_response):
     """Generator for collecting drug class names from RxNav JSON response"""
     for rx_class in rxnav_response["rxclassDrugInfoList"]["rxclassDrugInfo"]:
-        yield rx_class["rxclassMinConceptItem"]["className"]
+        yield rx_class["rxclassMinConceptItem"]["classId"]
 
 
 def load_drug_class_map(filename="rx-class-map.json"):
