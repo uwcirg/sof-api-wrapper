@@ -29,28 +29,28 @@ def add_drug_classes(med, rxnav_url):
 
     rxnav_response = get_drug_classes(rxcui, rxnav_url)
     drug_class_map = load_drug_class_map()
-    drug_classes = set(
-        drug_class_map[drug_class]
-        for drug_class in drug_class_filter(rxnav_response) if drug_class in drug_class_map
+    cosri_drug_classes = set(
+        drug_class_map[drug_class_id]
+        for drug_class_id in drug_class_filter(rxnav_response) if drug_class_id in drug_class_map
     )
 
-    if not drug_classes:
-
+    if not cosri_drug_classes:
         msg = f"drug class unavailable: {med_text} ({meds})"
         audit_entry(
             msg,
             extra={'tags': ['RxNorm', 'rxnorm-drug-class-not-found']},
-            level='warn')
+            level='warn',
+        )
         # submit error for ELK alerts as this should get attention
         current_app.logger.error(msg)
 
     annotated_med = med.copy()
     med_cc_extensions = annotated_med["medicationCodeableConcept"].get("extension", [])
 
-    for drug_class in drug_classes:
+    for cosri_drug_class in cosri_drug_classes:
         med_cc_extensions.append({
             "url": "http://cosri.org/fhir/drug_class",
-            "valueString": drug_class,
+            "valueString": cosri_drug_class,
         })
 
     annotated_med["medicationCodeableConcept"]["extension"] = med_cc_extensions
@@ -62,22 +62,22 @@ def get_drug_classes(rxcui, rxnav_url):
 
     https://rxnav.nlm.nih.gov/api-RxClass.getClassByRxNormDrugId.html
     """
-    b4 = timeit.default_timer()
+    start_time = timeit.default_timer()
     cached_session = CS_Singleton().cached_session
     response = cached_session.get(
         url=f"{rxnav_url}/REST/rxclass/class/byRxcui.json",
         params={"rxcui": rxcui},
     )
-    delta = timeit.default_timer() - b4
-    if delta > 0.01:
-        current_app.logger.debug(f"uncached rxnav {rxcui} request time: {delta}")
+    request_time = timeit.default_timer() - start_time
+    if request_time > 0.01:
+        current_app.logger.debug(f"uncached rxnav {rxcui} request time: {request_time}")
     return response.json()
 
 
 def drug_class_filter(rxnav_response):
     """Generator for collecting drug class names from RxNav JSON response"""
     for rx_class in rxnav_response["rxclassDrugInfoList"]["rxclassDrugInfo"]:
-        yield rx_class["rxclassMinConceptItem"]["className"]
+        yield rx_class["rxclassMinConceptItem"]["classId"]
 
 
 def load_drug_class_map(filename="rx-class-map.json"):
