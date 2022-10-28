@@ -87,7 +87,11 @@ def pdmp_med_requests(**kwargs):
     )
     params = kwargs or dict(request.args)
     user = get_session_value('user')
-    if not user or 'DEA' not in user:
+
+    # in a demo deploy, SCRIPT_ENDPOINT_URL will be configured, but empty
+    if current_app.config.get("SCRIPT_ENDPOINT_URL") == "":
+        user['DEA'] = "FAKEDEA123"
+    elif not user or 'DEA' not in user:
         return jsonify_abort(status_code=400, message="DEA not found")
     params['DEA'] = user['DEA']
     return pdmp_meds(pdmp_url, params)
@@ -109,7 +113,11 @@ def pdmp_med_orders(**kwargs):
         )
     params = kwargs or request.args
     user = get_session_value('user')
-    if not user or 'DEA' not in user:
+
+    # in a demo deploy, SCRIPT_ENDPOINT_URL will be configured, but empty
+    if current_app.config.get("SCRIPT_ENDPOINT_URL") == "":
+        user['DEA'] = "FAKEDEA123"
+    elif not user or 'DEA' not in user:
         return jsonify_abort(status_code=400, message="DEA not found")
     params['DEA'] = user['DEA']
     return pdmp_meds(pdmp_url, params)
