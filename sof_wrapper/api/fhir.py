@@ -90,10 +90,14 @@ def pdmp_med_requests(**kwargs):
     user = get_session_value('user')
 
     # in a demo deploy, SCRIPT_ENDPOINT_URL will be configured, but empty
-    if current_app.config.get("SCRIPT_ENDPOINT_URL") == "":
+    if user and "DEA" in user:
+        DEA = user["DEA"]
+    # in a demo deploy, SCRIPT_ENDPOINT_URL will be configured, but empty
+    elif current_app.config.get("SCRIPT_ENDPOINT_URL") == "":
         DEA = "FAKEDEA123"
-    elif not user or 'DEA' not in user:
+    else:
         return jsonify_abort(status_code=400, message="DEA not found")
+
     params['DEA'] = DEA
     return pdmp_meds(pdmp_url, params)
 
@@ -116,11 +120,14 @@ def pdmp_med_orders(**kwargs):
     # decoded JWT, or FHIR Practioner reference (eg Practitioner/ID)
     user = get_session_value('user')
 
+    if user and "DEA" in user:
+        DEA = user["DEA"]
     # in a demo deploy, SCRIPT_ENDPOINT_URL will be configured, but empty
-    if current_app.config.get("SCRIPT_ENDPOINT_URL") == "":
+    elif current_app.config.get("SCRIPT_ENDPOINT_URL") == "":
         DEA = "FAKEDEA123"
-    if not user or 'DEA' not in user:
+    else:
         return jsonify_abort(status_code=400, message="DEA not found")
+
     params['DEA'] = DEA
     return pdmp_meds(pdmp_url, params)
 
