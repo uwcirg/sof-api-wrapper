@@ -89,7 +89,6 @@ def pdmp_med_requests(**kwargs):
     # decoded JWT, or FHIR Practioner reference (eg Practitioner/ID)
     user = get_session_value('user')
 
-    # in a demo deploy, SCRIPT_ENDPOINT_URL will be configured, but empty
     if user and "DEA" in user:
         DEA = user["DEA"]
     # in a demo deploy, SCRIPT_ENDPOINT_URL will be configured, but empty
