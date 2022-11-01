@@ -70,6 +70,20 @@ def emr_med_orders(patient_id):
     return emr_meds(emr_url, params, request.headers)
 
 
+def get_dea(user):
+    """
+    Look up current user's DEA from their decoded access token JWT
+    if configured as demo, return dummy value
+    """
+    if user and "DEA" in user:
+        return user["DEA"]
+
+    # in a demo deploy, SCRIPT_ENDPOINT_URL will be configured, but empty
+    if current_app.config.get("SCRIPT_ENDPOINT_URL") == "":
+        return "FAKEDEA123"
+
+    return None
+
 @blueprint.route(f'{r4prefix}/pdmp/MedicationRequest')
 def pdmp_med_requests(**kwargs):
     """return results from PDMP request for MedicationRequest
@@ -88,15 +102,11 @@ def pdmp_med_requests(**kwargs):
     # decoded JWT, or FHIR Practioner reference (eg Practitioner/ID)
     user = get_session_value('user')
 
-    if user and "DEA" in user:
-        DEA = user["DEA"]
-    # in a demo deploy, SCRIPT_ENDPOINT_URL will be configured, but empty
-    elif current_app.config.get("SCRIPT_ENDPOINT_URL") == "":
-        DEA = "FAKEDEA123"
-    else:
+    DEA = get_dea(user)
+    if not DEA:
         return jsonify_abort(status_code=400, message="DEA not found")
-
     params['DEA'] = DEA
+
     return pdmp_meds(pdmp_url, params)
 
 
@@ -118,15 +128,11 @@ def pdmp_med_orders(**kwargs):
     # decoded JWT, or FHIR Practioner reference (eg Practitioner/ID)
     user = get_session_value('user')
 
-    if user and "DEA" in user:
-        DEA = user["DEA"]
-    # in a demo deploy, SCRIPT_ENDPOINT_URL will be configured, but empty
-    elif current_app.config.get("SCRIPT_ENDPOINT_URL") == "":
-        DEA = "FAKEDEA123"
-    else:
+    DEA = get_dea(user)
+    if not DEA:
         return jsonify_abort(status_code=400, message="DEA not found")
-
     params['DEA'] = DEA
+
     return pdmp_meds(pdmp_url, params)
 
 
