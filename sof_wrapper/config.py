@@ -33,6 +33,9 @@ LOG_LEVEL = os.environ.get('LOG_LEVEL', 'DEBUG').upper()
 LAUNCH_DEST = os.getenv("LAUNCH_DEST")
 
 PDMP_URL = os.getenv("PDMP_URL")
+# TODO use better indicator
+# use an empty string to indicate demo deploy
+SCRIPT_ENDPOINT_URL = os.getenv("SCRIPT_ENDPOINT_URL")
 
 PHR_URL = os.getenv("PHR_URL")
 PHR_TOKEN = os.getenv("PHR_TOKEN")

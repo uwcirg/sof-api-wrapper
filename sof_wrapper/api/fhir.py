@@ -35,25 +35,6 @@ def annotate_meds(med_bundle):
     return annotated_bundle
 
 
-@blueprint.route(f'{r4prefix}/emr/MedicationRequest', defaults={'patient_id': None})
-@blueprint.route(f'{r4prefix}/emr/MedicationRequest/<string:patient_id>')
-def emr_med_requests(patient_id):
-    base_url = get_session_value('iss')
-    emr_url = f'{base_url}/MedicationRequest'
-    params = {"subject": f"Patient/{patient_id}"} if patient_id else {}
-    return emr_meds(emr_url, params, request.headers)
-
-
-@blueprint.route(f'{r2prefix}/emr/MedicationOrder', defaults={'patient_id': None})
-@blueprint.route(f'{r2prefix}/emr/MedicationOrder/<string:patient_id>')
-def emr_med_orders(patient_id):
-    base_url = get_session_value('iss')
-    emr_url = f'{base_url}/MedicationOrder'
-    params = {"patient": f"Patient/{patient_id}"} if patient_id else {}
-
-    return emr_meds(emr_url, params, request.headers)
-
-
 def emr_meds(emr_url, params, headers):
     upstream_headers = {}
     for header_name in PROXY_HEADERS:
@@ -71,6 +52,38 @@ def emr_meds(emr_url, params, headers):
     return response.json()
 
 
+@blueprint.route(f'{r4prefix}/emr/MedicationRequest', defaults={'patient_id': None})
+@blueprint.route(f'{r4prefix}/emr/MedicationRequest/<string:patient_id>')
+def emr_med_requests(patient_id):
+    base_url = get_session_value('iss')
+    emr_url = f'{base_url}/MedicationRequest'
+    params = {"subject": f"Patient/{patient_id}"} if patient_id else {}
+    return emr_meds(emr_url, params, request.headers)
+
+
+@blueprint.route(f'{r2prefix}/emr/MedicationOrder', defaults={'patient_id': None})
+@blueprint.route(f'{r2prefix}/emr/MedicationOrder/<string:patient_id>')
+def emr_med_orders(patient_id):
+    base_url = get_session_value('iss')
+    emr_url = f'{base_url}/MedicationOrder'
+    params = {"patient": f"Patient/{patient_id}"} if patient_id else {}
+    return emr_meds(emr_url, params, request.headers)
+
+
+def get_dea(user):
+    """
+    Look up current user's DEA from their decoded access token JWT
+    if configured as demo, return dummy value
+    """
+    if user and "DEA" in user:
+        return user["DEA"]
+
+    # in a demo deploy, SCRIPT_ENDPOINT_URL will be configured, but empty
+    if current_app.config.get("SCRIPT_ENDPOINT_URL") == "":
+        return "FAKEDEA123"
+
+    return None
+
 @blueprint.route(f'{r4prefix}/pdmp/MedicationRequest')
 def pdmp_med_requests(**kwargs):
     """return results from PDMP request for MedicationRequest
@@ -86,10 +99,14 @@ def pdmp_med_requests(**kwargs):
         base_url=current_app.config['PDMP_URL'],
     )
     params = kwargs or dict(request.args)
+    # decoded JWT, or FHIR Practioner reference (eg Practitioner/ID)
     user = get_session_value('user')
-    if not user or 'DEA' not in user:
+
+    DEA = get_dea(user)
+    if not DEA:
         return jsonify_abort(status_code=400, message="DEA not found")
-    params['DEA'] = user['DEA']
+    params['DEA'] = DEA
+
     return pdmp_meds(pdmp_url, params)
 
 
@@ -108,10 +125,14 @@ def pdmp_med_orders(**kwargs):
         base_url=current_app.config['PDMP_URL'],
         )
     params = kwargs or request.args
+    # decoded JWT, or FHIR Practioner reference (eg Practitioner/ID)
     user = get_session_value('user')
-    if not user or 'DEA' not in user:
+
+    DEA = get_dea(user)
+    if not DEA:
         return jsonify_abort(status_code=400, message="DEA not found")
-    params['DEA'] = user['DEA']
+    params['DEA'] = DEA
+
     return pdmp_meds(pdmp_url, params)
 
 
