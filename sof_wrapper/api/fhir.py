@@ -35,25 +35,6 @@ def annotate_meds(med_bundle):
     return annotated_bundle
 
 
-@blueprint.route(f'{r4prefix}/emr/MedicationRequest', defaults={'patient_id': None})
-@blueprint.route(f'{r4prefix}/emr/MedicationRequest/<string:patient_id>')
-def emr_med_requests(patient_id):
-    base_url = get_session_value('iss')
-    emr_url = f'{base_url}/MedicationRequest'
-    params = {"subject": f"Patient/{patient_id}"} if patient_id else {}
-    return emr_meds(emr_url, params, request.headers)
-
-
-@blueprint.route(f'{r2prefix}/emr/MedicationOrder', defaults={'patient_id': None})
-@blueprint.route(f'{r2prefix}/emr/MedicationOrder/<string:patient_id>')
-def emr_med_orders(patient_id):
-    base_url = get_session_value('iss')
-    emr_url = f'{base_url}/MedicationOrder'
-    params = {"patient": f"Patient/{patient_id}"} if patient_id else {}
-
-    return emr_meds(emr_url, params, request.headers)
-
-
 def emr_meds(emr_url, params, headers):
     upstream_headers = {}
     for header_name in PROXY_HEADERS:
@@ -69,6 +50,24 @@ def emr_meds(emr_url, params, headers):
     current_app.logger.debug("emr returned {} MedicationRequests".format(
         len(response.json().get("entry", []))))
     return response.json()
+
+
+@blueprint.route(f'{r4prefix}/emr/MedicationRequest', defaults={'patient_id': None})
+@blueprint.route(f'{r4prefix}/emr/MedicationRequest/<string:patient_id>')
+def emr_med_requests(patient_id):
+    base_url = get_session_value('iss')
+    emr_url = f'{base_url}/MedicationRequest'
+    params = {"subject": f"Patient/{patient_id}"} if patient_id else {}
+    return emr_meds(emr_url, params, request.headers)
+
+
+@blueprint.route(f'{r2prefix}/emr/MedicationOrder', defaults={'patient_id': None})
+@blueprint.route(f'{r2prefix}/emr/MedicationOrder/<string:patient_id>')
+def emr_med_orders(patient_id):
+    base_url = get_session_value('iss')
+    emr_url = f'{base_url}/MedicationOrder'
+    params = {"patient": f"Patient/{patient_id}"} if patient_id else {}
+    return emr_meds(emr_url, params, request.headers)
 
 
 @blueprint.route(f'{r4prefix}/pdmp/MedicationRequest')
