@@ -17,15 +17,19 @@ jobs:
       - name: Set environment variable for version from git output
         run: echo "VERSION_STRING=$(git describe --always --tags)" >> $GITHUB_ENV
 
-      - name: Publish to Dockerhub registry
+      - name: Publish to GitHub Container Registry
         # todo: pin to hash
-        uses: elgohr/Publish-Docker-Github-Action@master
+        uses: elgohr/Publish-Docker-Github-Action@main
         with:
-          # https://help.github.com/en/actions/reference/context-and-expression-syntax-for-github-actions
           name: ${{ github.repository }}
-          # configured at repo settings/secrets
-          username: ${{ secrets.DOCKER_USERNAME }}
-          password: ${{ secrets.DOCKER_PASSWORD }}
+          registry: ghcr.io
+
+          # GitHub actor
+          username: ${{ github.actor }}
+
+          # GitHub access token
+          password: ${{ secrets.GITHUB_TOKEN }}
+
           # create docker image tags to match git tags
           tag_names: true
           buildargs: VERSION_STRING
