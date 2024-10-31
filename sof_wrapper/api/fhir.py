@@ -48,7 +48,7 @@ def emr_meds(emr_url, params, headers):
     )
     response.raise_for_status()
     current_app.logger.debug(
-        "emr returned %d MedicationRequests in %d seconds",
+        "emr returned %d MedicationRequests in %f seconds",
         len(response.json().get("entry", [])),
         response.elapsed.total_seconds(),
     )
@@ -233,7 +233,7 @@ def patient_by_id(id):
         headers=upstream_headers,
     )
     response.raise_for_status()
-    current_app.logger.debug("returned Patient in %d seconds", response.elapsed.total_seconds())
+    current_app.logger.debug("returned Patient in %f seconds", response.elapsed.total_seconds())
     patient_fhir = response.json()
     # TODO when possible w/o session cookie: set_session_value(key, patient_fhir)
 
@@ -282,7 +282,7 @@ def route_fhir(relative_path, session_id):
     )
     upstream_response.raise_for_status()
     current_app.logger.debug(
-        "FHIR server returned %s in %d seconds",
+        "FHIR server returned %s in %f seconds",
         relative_path,
         upstream_response.elapsed.total_seconds(),
     )
