@@ -48,8 +48,9 @@ def emr_meds(emr_url, params, headers):
     )
     response.raise_for_status()
     current_app.logger.debug(
-        "emr returned %d MedicationRequests",
+        "emr returned %d MedicationRequests in %d seconds",
         len(response.json().get("entry", [])),
+        response.elapsed.total_seconds(),
     )
     return response.json()
 
@@ -142,8 +143,9 @@ def pdmp_meds(pdmp_url, params):
     response = requests.get(pdmp_url, params=params)
     response.raise_for_status()
     audit_entry(
-        "PDMP returned {} MedicationRequest/Orders".format(
+        "PDMP facade returned {} MedicationRequest/Orders in {} seconds".format(
             len(response.json().get("entry", [])),
+            response.elapsed.total_seconds(),
         ),
         extra={'tags': ['PDMP', 'MedicationRequest'], 'meds': [e for e in response.json().get("entry", [])]}
     )
@@ -231,6 +233,7 @@ def patient_by_id(id):
         headers=upstream_headers,
     )
     response.raise_for_status()
+    current_app.logger.debug("returned Patient in %d seconds", response.elapsed.total_seconds())
     patient_fhir = response.json()
     # TODO when possible w/o session cookie: set_session_value(key, patient_fhir)
 
@@ -278,6 +281,11 @@ def route_fhir(relative_path, session_id):
         params=request.args,
     )
     upstream_response.raise_for_status()
+    current_app.logger.debug(
+        "FHIR server returned %s in %d seconds",
+        relative_path,
+        upstream_response.elapsed.total_seconds(),
+    )
     return upstream_response.json()
 
 
