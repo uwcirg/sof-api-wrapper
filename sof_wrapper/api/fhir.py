@@ -47,8 +47,10 @@ def emr_meds(emr_url, params, headers):
         headers=upstream_headers,
     )
     response.raise_for_status()
-    current_app.logger.debug("emr returned {} MedicationRequests".format(
-        len(response.json().get("entry", []))))
+    current_app.logger.debug(
+        "emr returned %d MedicationRequests",
+        len(response.json().get("entry", [])),
+    )
     return response.json()
 
 
@@ -139,9 +141,12 @@ def pdmp_med_orders(**kwargs):
 def pdmp_meds(pdmp_url, params):
     response = requests.get(pdmp_url, params=params)
     response.raise_for_status()
-    audit_entry("PDMP returned {} MedicationRequest/Orders".format(
-        len(response.json().get("entry", []))),
-        extra={'tags': ['PDMP', 'MedicationRequest'], 'meds': [e for e in response.json().get("entry", [])]})
+    audit_entry(
+        "PDMP returned {} MedicationRequest/Orders".format(
+            len(response.json().get("entry", [])),
+        ),
+        extra={'tags': ['PDMP', 'MedicationRequest'], 'meds': [e for e in response.json().get("entry", [])]}
+    )
     return response.json()
 
 
