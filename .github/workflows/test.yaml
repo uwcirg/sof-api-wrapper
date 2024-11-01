@@ -24,6 +24,9 @@ jobs:
     steps:
       - uses: actions/checkout@v1
 
+      - name: Upgrade setuptools
+        run: python3 -m pip install --upgrade setuptools
+
       - name: Install test runner
         run: python3 -m pip install tox
 
