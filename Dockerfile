@@ -15,4 +15,4 @@ ENV FLASK_APP=sof_wrapper.app:create_app() \
 
 EXPOSE "${PORT}"
 
-CMD gunicorn --workers=5 --bind "0.0.0.0:${PORT:-8000}" ${FLASK_APP}
+CMD gunicorn --workers=9 --bind "0.0.0.0:${PORT:-8000}" ${FLASK_APP}
