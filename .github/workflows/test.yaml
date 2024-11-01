@@ -24,6 +24,9 @@ jobs:
     steps:
       - uses: actions/checkout@v1
 
+      - name: Dump installed modules
+        run: python3 -m pip freeze
+
       - name: Upgrade setuptools
         run: python3 -m pip install --upgrade setuptools
 
