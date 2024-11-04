@@ -17,6 +17,6 @@ EXPOSE "${PORT}"
 
 # launch workers based on number of CPUs: 2n+1
 CMD gunicorn \
-    --workers="$((2*$(nproc)+1))" \
+    --threads="$((2*$(nproc)+1))" \
     --bind "0.0.0.0:${PORT:-8000}" \
 ${FLASK_APP}
