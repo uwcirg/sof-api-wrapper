@@ -11,7 +11,7 @@ def add_drug_classes(med, rxnav_url):
     """Add Drug Classes"""
 
     meds = []
-    med_text = med["medicationCodeableConcept"]["text"]
+    med_text = med.get("medicationCodeableConcept", {}).get("text", "")
 
     for med_code in med["medicationCodeableConcept"]["coding"]:
         meds.append(f"{med_code['system']}|{med_code['code']}")
