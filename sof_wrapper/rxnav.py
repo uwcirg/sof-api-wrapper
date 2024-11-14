@@ -10,6 +10,10 @@ from sof_wrapper.extensions import CS_Singleton
 def add_drug_classes(med, rxnav_url):
     """Add Drug Classes"""
 
+    # adding drug classes requires `medicationCodeableConcept` coding set
+    if "medicationCodeableConcept" not in med:
+        return med
+
     meds = []
     med_text = med.get("medicationCodeableConcept", {}).get("text", "")
 
