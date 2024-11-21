@@ -30,8 +30,10 @@ def annotate_meds(med_bundle):
     annotated_bundle = med_bundle.copy()
     annotated_bundle['entry'] = []
 
-    for med in med_bundle['entry']:
-        annotated_bundle['entry'].append(add_drug_classes(med, rxnav_url=current_app.config["RXNAV_URL"]))
+    for resource in med_bundle['entry']:
+        annotated_bundle['entry'].append(
+            {"resource": add_drug_classes(resource["resource"], rxnav_url=current_app.config["RXNAV_URL"])}
+        )
     return annotated_bundle
 
 
@@ -147,7 +149,7 @@ def pdmp_meds(pdmp_url, params):
             len(response.json().get("entry", [])),
             response.elapsed.total_seconds(),
         ),
-        extra={'tags': ['PDMP', 'MedicationRequest'], 'meds': [e for e in response.json().get("entry", [])]}
+        extra={'tags': ['PDMP', 'MedicationRequest']}
     )
     return response.json()
 
