@@ -6,7 +6,7 @@
 #
 authlib==0.14.3           # via sof_wrapper (setup.py)
 cachelib==0.1.1           # via flask-session
-certifi==2021.5.30        # via requests
+certifi==2022.12.7        # via requests
 cffi==1.14.1              # via cryptography
 charset-normalizer==2.0.6  # via requests
 click==8.0.1              # via flask
