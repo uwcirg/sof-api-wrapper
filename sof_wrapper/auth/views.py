@@ -156,12 +156,13 @@ def authorize():
     extracted_id_token = extract_payload(token_response.get('id_token'))
     username = extracted_id_token.get('preferred_username')
     DEA = extracted_id_token.get('DEA')
+    roles = extracted_id_token.get('realm_access',{}).get('roles')
 
     # standalone uses profile
     if 'profile' in extracted_id_token:
         session['user'] = session.get('user', extracted_id_token['profile'])
     else:
-        session['user'] = session.get('user', {'username': username, 'DEA': DEA})
+        session['user'] = session.get('user', {'username': username, 'DEA': DEA, 'roles': roles})
 
     if 'patient' in token_response:
         session['subject'] = session.get('subject', 'Patient/{}'.format(token_response['patient']))
