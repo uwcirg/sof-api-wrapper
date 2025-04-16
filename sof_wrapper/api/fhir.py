@@ -244,6 +244,7 @@ def patient_by_id(id):
 
 @blueprint.route('/fhir-router/', defaults={'relative_path': '', 'session_id': None})
 @blueprint.route('/fhir-router/<string:session_id>/<path:relative_path>')
+@blueprint.route('/fhir-router/<string:session_id>/', defaults={'relative_path': ''})
 def route_fhir(relative_path, session_id):
     g.session_id = session_id
     current_app.logger.debug('received session_id as path parameter: %s', session_id)
