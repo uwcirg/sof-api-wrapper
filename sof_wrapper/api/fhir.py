@@ -11,7 +11,7 @@ blueprint = Blueprint('fhir', __name__)
 r2prefix = '/v/r2/fhir'
 r4prefix = '/v/r4/fhir'
 
-PROXY_HEADERS = ('Authorization', 'Cache-Control')
+PROXY_HEADERS = ('Authorization', 'Cache-Control', 'Content-Type')
 
 def collate_results(*result_sets):
     """Compile given result sets into a single bundle"""
@@ -278,8 +278,11 @@ def route_fhir(relative_path, session_id):
         if header_name in request.headers:
             upstream_headers[header_name] = request.headers[header_name]
 
-    upstream_response = requests.get(
+    upstream_response = requests.request(
         url=upstream_fhir_url,
+        method=request.method,
+        json=request.json,
+        data=request.data,
         headers=upstream_headers,
         params=request.args,
     )
@@ -296,5 +299,6 @@ def route_fhir(relative_path, session_id):
 def add_header(response):
     response.headers['Access-Control-Allow-Origin'] = '*'
     response.headers['Access-Control-Allow-Headers'] = 'Authorization, Cache-Control, Content-Type'
+    response.headers['Access-Control-Allow-Methods'] = 'GET, OPTIONS, POST, PUT'
 
     return response
