@@ -281,6 +281,8 @@ def route_fhir(relative_path, session_id):
     upstream_response = requests.request(
         url=upstream_fhir_url,
         method=request.method,
+        json=request.json,
+        data=request.data,
         headers=upstream_headers,
         params=request.args,
     )
