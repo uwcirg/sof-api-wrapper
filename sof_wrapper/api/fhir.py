@@ -11,7 +11,7 @@ blueprint = Blueprint('fhir', __name__)
 r2prefix = '/v/r2/fhir'
 r4prefix = '/v/r4/fhir'
 
-PROXY_HEADERS = ('Authorization', 'Cache-Control')
+PROXY_HEADERS = ('Authorization', 'Cache-Control', 'Content-Type')
 
 def collate_results(*result_sets):
     """Compile given result sets into a single bundle"""
