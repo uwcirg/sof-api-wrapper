@@ -299,6 +299,6 @@ def route_fhir(relative_path, session_id):
 def add_header(response):
     response.headers['Access-Control-Allow-Origin'] = '*'
     response.headers['Access-Control-Allow-Headers'] = 'Authorization, Cache-Control, Content-Type'
-    response.headers['Access-Control-Allow-Methods'] = 'GET, OPTIONS, POST, PUT'
+    response.headers['Access-Control-Allow-Methods'] = 'GET, OPTIONS, POST, PUT, DELETE'
 
     return response
