@@ -243,8 +243,8 @@ def patient_by_id(id):
 
 
 @blueprint.route('/fhir-router/', defaults={'relative_path': '', 'session_id': None})
-@blueprint.route('/fhir-router/<string:session_id>/<path:relative_path>', methods=('GET', 'POST', 'PUT'))
-@blueprint.route('/fhir-router/<string:session_id>/', defaults={'relative_path': ''}, methods=('GET', 'POST', 'PUT'))
+@blueprint.route('/fhir-router/<string:session_id>/<path:relative_path>', methods=('DELETE', 'GET', 'POST', 'PUT'))
+@blueprint.route('/fhir-router/<string:session_id>/', defaults={'relative_path': ''}, methods=('DELETE', 'GET', 'POST', 'PUT'))
 def route_fhir(relative_path, session_id):
     g.session_id = session_id
     current_app.logger.debug('received session_id as path parameter: %s', session_id)
@@ -299,6 +299,6 @@ def route_fhir(relative_path, session_id):
 def add_header(response):
     response.headers['Access-Control-Allow-Origin'] = '*'
     response.headers['Access-Control-Allow-Headers'] = 'Authorization, Cache-Control, Content-Type'
-    response.headers['Access-Control-Allow-Methods'] = 'GET, OPTIONS, POST, PUT, DELETE'
+    response.headers['Access-Control-Allow-Methods'] = 'DELETE, GET, OPTIONS, POST, PUT'
 
     return response
