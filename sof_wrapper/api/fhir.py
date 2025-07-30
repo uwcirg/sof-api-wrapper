@@ -149,7 +149,7 @@ def pdmp_meds(pdmp_url, params):
             len(response.json().get("entry", [])),
             response.elapsed.total_seconds(),
         ),
-        extra={'tags': ['PDMP', 'MedicationRequest']}
+        extra={'tags': ['PDMP', 'MedicationRequest'], 'meds': [e for e in response.json().get("entry", [])]}
     )
     return response.json()
 
