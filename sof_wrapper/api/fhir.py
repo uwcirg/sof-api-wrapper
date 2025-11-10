@@ -11,7 +11,7 @@ blueprint = Blueprint('fhir', __name__)
 r2prefix = '/v/r2/fhir'
 r4prefix = '/v/r4/fhir'
 
-PROXY_HEADERS = ('Authorization', 'Cache-Control')
+PROXY_HEADERS = ('Authorization', 'Cache-Control', 'Content-Type')
 
 def collate_results(*result_sets):
     """Compile given result sets into a single bundle"""
@@ -243,8 +243,8 @@ def patient_by_id(id):
 
 
 @blueprint.route('/fhir-router/', defaults={'relative_path': '', 'session_id': None})
-@blueprint.route('/fhir-router/<string:session_id>/<path:relative_path>')
-@blueprint.route('/fhir-router/<string:session_id>/', defaults={'relative_path': ''})
+@blueprint.route('/fhir-router/<string:session_id>/<path:relative_path>', methods=('DELETE', 'GET', 'POST', 'PUT'))
+@blueprint.route('/fhir-router/<string:session_id>/', defaults={'relative_path': ''}, methods=('DELETE', 'GET', 'POST', 'PUT'))
 def route_fhir(relative_path, session_id):
     g.session_id = session_id
     current_app.logger.debug('received session_id as path parameter: %s', session_id)
@@ -278,8 +278,11 @@ def route_fhir(relative_path, session_id):
         if header_name in request.headers:
             upstream_headers[header_name] = request.headers[header_name]
 
-    upstream_response = requests.get(
+    upstream_response = requests.request(
         url=upstream_fhir_url,
+        method=request.method,
+        json=request.json,
+        data=request.data,
         headers=upstream_headers,
         params=request.args,
     )
@@ -295,6 +298,7 @@ def route_fhir(relative_path, session_id):
 @blueprint.after_request
 def add_header(response):
     response.headers['Access-Control-Allow-Origin'] = '*'
-    response.headers['Access-Control-Allow-Headers'] = 'Authorization, Cache-Control'
+    response.headers['Access-Control-Allow-Headers'] = 'Authorization, Cache-Control, Content-Type'
+    response.headers['Access-Control-Allow-Methods'] = 'DELETE, GET, OPTIONS, POST, PUT'
 
     return response
