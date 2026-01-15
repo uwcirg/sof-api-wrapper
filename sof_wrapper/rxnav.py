@@ -42,7 +42,7 @@ def add_drug_classes(med, rxnav_url):
             level='warn',
         )
         # submit error for ELK alerts as this should get attention
-        current_app.logger.error(msg)
+        current_app.logger.warning(msg)
 
     annotated_med = med.copy()
     med_cc_extensions = annotated_med["medicationCodeableConcept"].get("extension", [])
