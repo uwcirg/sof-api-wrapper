@@ -33,5 +33,5 @@ six==1.16.0               # via ecdsa, flask-cors, url-normalize
 typing-extensions==3.10.0.2  # via importlib-metadata
 url-normalize==1.4.3      # via requests-cache
 urllib3==1.26.7           # via requests, requests-cache
-werkzeug==2.0.1           # via flask
+werkzeug==2.2.3           # via flask
 zipp==3.5.0               # via importlib-metadata
